@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 using SciChartHeatmapAudio.Services;
 using SciChartHeatmapAudio.CustomViews;
 using Java.Lang;
+using SciChart.Core.Model;
+using System.Linq;
+
 
 namespace SciChartHeatmapAudio
 {
@@ -24,8 +27,12 @@ namespace SciChartHeatmapAudio
         XyDataSeries<int, int> samplesDataSeries;
         XyDataSeries<int, int> fftDataSeries;
 
+        //HeatmapRenderableSeries heatmapSeries;
         //FastUniformHeatmapRenderableSeries heatmapSeries;
-        HeatmapRenderableSeries heatmapSeries;
+        //UniformHeatmapDataSeries<int, int, double> heatmapSeries = new UniformHeatmapDataSeries<int, int, double>(400, 400);
+        //UniformHeatmapDataSeries heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(1024, 1024);
+        //private readonly UniformHeatmapDataSeries<int, int, double> heatmapSeries = new UniformHeatmapDataSeries<int, int, double>(1024, 1024);
+        private readonly UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(1024, 1024);
 
         int samplesCount = 2048;
 
@@ -34,12 +41,18 @@ namespace SciChartHeatmapAudio
 
         SciChartSurface surfaceView;
 
+        // From XF Scichartshowcase Converter
+        //UniformHeatmapDataSeries<int, int, int> spectrogramDataSeries;
+        // X index - value of last added element into X values
+        int lastElement = 0;
+
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
 
             var licensingContract = @"<LicenseContract>" +
-              "</LicenseContract>";
+                                     "</LicenseContract>";
 
             SciChart.Charting.Visuals.SciChartSurface.SetRuntimeLicenseKey(licensingContract);
 
@@ -85,16 +98,50 @@ namespace SciChartHeatmapAudio
                 if (samples.Length < samplesCount)
                     return;
 
+
                 //samplesDataSeries.YValues = samples;
                 //samplesDataSeries.YValues.Add(samples);
                 //samplesDataSeries.YValues.AddAll(samples);
-                samplesDataSeries.UpdateRangeYAt(0, samples);
+                //samplesDataSeries.UpdateRangeYAt(0, samples);
+                UpdateSamplesDataSeries(samples);
+                /*
+                var xArray = new int[samples.Length];
+                for (int i = 0; i < samples.Length; i++)
+                {
+                    xArray[i] = lastElement++;
+                }
+                samplesDataSeries.Append(xArray, samples);
+                */
 
                 var fftValues = audioService.FFT(samples);
+
                 //fftDataSeries.YValues = fftValues;
-                fftDataSeries.YValues.Add(fftValues);
-                heatmapSeries.AppenData(fftValues);
-                
+                //fftDataSeries.YValues.Add(fftValues);
+                UpdateFFTDataSeries(fftValues);
+                /*
+                var xArray = new int[fftValues.Length];
+                for (int i = 0; i < fftValues.Length; i++)
+                {
+                    xArray[i] = i;
+                }
+
+                try
+                {
+                    if (fftDataSeries.Count == 0)
+                        fftDataSeries.Append(xArray, fftValues);
+                    else
+                        fftDataSeries.UpdateRangeYAt(0, fftValues);
+                }
+                catch(Exception exc)
+                {
+                    System.Diagnostics.Debug.WriteLine("AudioService_samplesUpdated() - Exception : " + exc.ToString());
+                }
+                */
+
+                //heatmapSeries.AppenData(fftValues);
+                //heatmapSeries.Update(fftValues);
+                heatmapSeries.UpdateZValues(fftValues);
+
                 /*
                 Device.BeginInvokeOnMainThread(sampleSurface.UpdateDataSeries);
                 Device.BeginInvokeOnMainThread(fftSurface.UpdateDataSeries);
@@ -104,6 +151,76 @@ namespace SciChartHeatmapAudio
 
 
         }
+
+
+        #region from SciChartSurfaceRenderer
+
+        //private void UpdateSamplesDataSeries(XYDataSeries<int, int> dataSeries)
+        private void UpdateSamplesDataSeries(int[] dataSeries)
+        {
+            System.Diagnostics.Debug.WriteLine("UpdateSamplesDataSeries()");
+            /*
+            var xArray = new int[dataSeries.YValues.Length];
+            for (int i = 0; i < dataSeries.YValues.Length; i++)
+            {
+                xArray[i] = lastElement++;
+            }
+            samplesDataSeries.Append(xArray, dataSeries.YValues);
+            System.Diagnostics.Debug.WriteLine("UpdateSamplesDataSeries() - xarray : " + xArray.Length.ToString() + " - YValues : " + dataSeries.YValues.Sum().ToString());
+            */
+            var xArray = new int[dataSeries.Length];
+            for (int i = 0; i < dataSeries.Length; i++)
+            {
+                xArray[i] = lastElement++;
+            }
+            samplesDataSeries.Append(xArray, dataSeries);
+            System.Diagnostics.Debug.WriteLine("UpdateSamplesDataSeries() - xarray : " + xArray.Length.ToString() + " - YValues : " + dataSeries.Sum().ToString());
+        }
+
+
+        //private void UpdateFFTDataSeries(XYDataSeries<int, int> dataSeries)
+        private void UpdateFFTDataSeries(int[] dataSeries)
+        {
+            System.Diagnostics.Debug.WriteLine("UpdateFFTDataSeries()");
+
+            /*
+            var xArray = new int[dataSeries.YValues.Length];
+            for (int i = 0; i < dataSeries.YValues.Length; i++)
+            {
+                xArray[i] = i;
+            }
+
+            if (fftDataSeries.Count == 0)
+                fftDataSeries.Append(xArray, dataSeries.YValues);
+            else
+                fftDataSeries.UpdateRangeYAt(0, dataSeries.YValues);
+            */
+            var xArray = new int[dataSeries.Length];
+            for (int i = 0; i < dataSeries.Length; i++)
+            {
+                xArray[i] = i;
+            }
+
+            try
+            {
+                if (fftDataSeries.Count == 0)
+                {
+                    fftDataSeries.Append(xArray, dataSeries);
+                    System.Diagnostics.Debug.WriteLine("UpdateSamplesDataSeries() - xarray : " + xArray.Length.ToString() + " - YValues : " + dataSeries.Sum().ToString());
+                }
+                else
+                {
+                    fftDataSeries.UpdateRangeYAt(0, dataSeries);
+                    System.Diagnostics.Debug.WriteLine("UpdateSamplesDataSeries() - 0 - YValues : " + dataSeries.Sum().ToString());
+                }
+            }
+            catch (Exception exc)
+            {
+                System.Diagnostics.Debug.WriteLine("UpdateFFTDataSeries() - Exception : " + exc.ToString());
+            }
+        }
+
+        #endregion
 
         /*
         protected override void OnStart()
@@ -118,9 +235,10 @@ namespace SciChartHeatmapAudio
         {
             System.Diagnostics.Debug.WriteLine("ConfigureSpectrogramChart()");
 
-            //samplesDataSeries = new XYDataSeries<int, int> { FifoCapacity = 500000 };
+            //samplesDataSeries = new XYDataSeries<int, int> { FifoCapacity = 500000 };            
             samplesDataSeries = new XyDataSeries<int, int>() { FifoCapacity = new Integer(500000) };
-
+            fftDataSeries = new XyDataSeries<int, int>() { FifoCapacity = new Integer(500000) };
+            
             // Axis
             var xAxis = new NumericAxis(this)
             {
@@ -152,18 +270,26 @@ namespace SciChartHeatmapAudio
             surfaceView.YAxes.Add(yAxis);
 
 
+
             //SciChartSurfaceView debug = new SciChartSurfaceView();
 
             var fastUniformHeatmapRenderableSeries = new FastUniformHeatmapRenderableSeries();
 
             // Create a ColorMap
+            /*
             ColorMap colorMap = new ColorMap(
                 new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
                 new float[] { 0f, 0.0001f, 0.25f, 0.50f, 0.75f, 1f }
                 );
+            */
+            ColorMap colorMap = new ColorMap(
+                new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
+                new float[] { 0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f }
+                );
+
             // Apply the ColorMap
             fastUniformHeatmapRenderableSeries.ColorMap = colorMap;
-
+            fastUniformHeatmapRenderableSeries.DataSeries = heatmapSeries;
             fastUniformHeatmapRenderableSeries.Maximum = 70.0;
             fastUniformHeatmapRenderableSeries.Minimum = -30.0;
 

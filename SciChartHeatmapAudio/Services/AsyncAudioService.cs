@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AForge.Math;
 using Android.App;
@@ -26,9 +27,11 @@ namespace SciChartHeatmapAudio.Services
         int buffer = 2048 * sizeof(byte);
 
         // record file
-        static string filePath = "/data/data/Xamarin.Examples.Demo/files/testAudio.mp4";
+        ////static string filePath = "/data/data/SciChartHeatmapAudio.SciChartHeatmapAudio/files/testAudio.mp4";
+        static string filePath = "/data/testAudio.mp4";
         static string fileName = "testAudio.mp4";
-        byte[] audioBuffer = null;
+        //byte[] audioBuffer = null;
+        byte[] audioBuffer = new byte[2048];
         bool endRecording = false;
         bool isRecording = false;
 
@@ -76,6 +79,8 @@ namespace SciChartHeatmapAudio.Services
 
             audioRecord.StartRecording();
 
+            // stop button debug
+            /*
             while (audioRecord.RecordingState == RecordState.Recording)
             {
                 try
@@ -87,7 +92,8 @@ namespace SciChartHeatmapAudio.Services
                     throw ex;
                 }
             }
-
+            */
+            
             await SaveRecordAsync();
         }
 
@@ -96,8 +102,12 @@ namespace SciChartHeatmapAudio.Services
         public void StopRecord()
         {
             Logger.Log("StopRecordAsync()");
+            endRecording = true;
+            Thread.Sleep(250); // Give it time to drop out.
+            /*
             audioRecord.Stop();
             audioRecord = null;
+            */
         }
 
         void OnNext()
@@ -112,7 +122,10 @@ namespace SciChartHeatmapAudio.Services
                 result[i] = (int)audioBuffer[i];
             }
 
+            // stop button debug
+            /*
             samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+            */
         }
 
         /// <summary>
@@ -126,6 +139,7 @@ namespace SciChartHeatmapAudio.Services
             {
                 while (true)
                 {
+                    Logger.Log("SaveRecordAsync() - while true");
                     if (endRecording)
                     {
                         endRecording = false;
@@ -133,10 +147,33 @@ namespace SciChartHeatmapAudio.Services
                     }
                     try
                     {
+                        // default
+                        /*
                         // Keep reading the buffer while there is audio input.
                         int numBytes = await audioRecord.ReadAsync(audioBuffer, 0, audioBuffer.Length);
-                        await fileStream.WriteAsync(audioBuffer, 0, numBytes);
+                        //await fileStream.WriteAsync(audioBuffer, 0, numBytes);
+                        fileStream.Write(audioBuffer, 0, numBytes);
                         // Do something with the audio input.
+                        */
+
+                        // custom
+                        short[] audioBuffer = new short[2048];
+                        // Keep reading the buffer while there is audio input.
+                        int numBytes = await audioRecord.ReadAsync(audioBuffer, 0, audioBuffer.Length);
+                        //await fileStream.WriteAsync(audioBuffer, 0, numBytes);
+                        byte[] fileAudioBuffer = new byte[audioBuffer.Length * sizeof(short)];
+                        fileStream.Write(fileAudioBuffer, 0, numBytes);
+                        // Do something with the audio input.
+
+                        // OnNext
+                        Logger.Log("EmbeddedOnNext()");
+                        int[] result = new int[audioBuffer.Length];
+                        for (int i = 0; i < audioBuffer.Length; i++)
+                        {
+                            result[i] = (int)audioBuffer[i];
+                        }
+                        samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+
                     }
                     catch (Exception ex)
                     {

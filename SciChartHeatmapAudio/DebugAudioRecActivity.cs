@@ -64,7 +64,8 @@ namespace SciChartHeatmapAudio
             InitCharts();
 
 
-            FindViewById<Button>(Resource.Id.rec).Click += async delegate {
+            //FindViewById<Button>(Resource.Id.rec).Click += async delegate {
+            FindViewById<Button>(Resource.Id.rec).Click += delegate {
                 // Start AudioService
                 /*
                 token = cancelTokenSource.Token;
@@ -75,10 +76,12 @@ namespace SciChartHeatmapAudio
                     audioService.StartRecord();
                 }, token);
                 */
+
                 // Start AsyncAudioService
                 asyncAudioService = new AsyncAudioService();
                 asyncAudioService.samplesUpdated += AudioService_samplesUpdated;
-                await asyncAudioService.StartRecordAsync();
+                //await asyncAudioService.StartRecordAsync();
+                asyncAudioService.StartRecordAsync();
             };
 
             FindViewById<Button>(Resource.Id.stop).Click += delegate {
@@ -242,6 +245,9 @@ namespace SciChartHeatmapAudio
                     Logger.Log("AudioService_samplesUpdated() - samples.Length < samplesCount - sample.Length : " + samples.Length.ToString() + " samplesCount : " + samplesCount.ToString());
                     return;
                 }
+
+                Logger.Log("AudioService_samplesUpdated() - sample.Length : " + samples.Length.ToString());
+
                 //samplesDataSeries.YValues = samples;
                 UpdateSamplesDataSeries(samples);
 

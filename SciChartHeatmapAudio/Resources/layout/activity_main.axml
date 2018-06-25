@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="4dp"
         android:orientation="vertical"
-        android:rowCount="3">
+        android:rowCount="4">
         <Button
             android:id="@+id/debugHeatpMap"
             android:text="HeatMap sample" />
@@ -19,5 +19,8 @@
         <Button
             android:id="@+id/debugAudioWithRecording"
             android:text="Audio sample with recording" />
+        <Button
+            android:id="@+id/debugAudioWavConverter"
+            android:text="Audio sample with wav conversion" />
     </GridLayout>
 </LinearLayout>

@@ -52,6 +52,9 @@ namespace SciChartHeatmapAudio
         CancellationToken token;
         int lastElement = 0;
 
+        // AudioService
+        AudioService audioService;
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -66,10 +69,19 @@ namespace SciChartHeatmapAudio
             token = cancelTokenSource.Token;
             Task.Run(() =>
             {
-                var audioService = new AudioService();
+                //var audioService = new AudioService();
+                audioService = new AudioService();
                 audioService.samplesUpdated += AudioService_samplesUpdated;
                 audioService.StartRecord();
             }, token);
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            audioService.samplesUpdated -= AudioService_samplesUpdated;
+            audioService.StopRecord();
         }
 
         private void InitCharts()
@@ -226,6 +238,8 @@ namespace SciChartHeatmapAudio
                     Logger.Log("AudioService_samplesUpdated() - samples.Length < samplesCount - sample.Length : " + samples.Length.ToString() + " samplesCount : " + samplesCount.ToString());
                     return;
                 }
+                Logger.Log("AudioService_samplesUpdated() - sample.Length : " + samples.Length.ToString());
+
                 //samplesDataSeries.YValues = samples;
                 UpdateSamplesDataSeries(samples);
 

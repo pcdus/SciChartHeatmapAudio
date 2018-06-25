@@ -5,6 +5,7 @@ using System.Text;
 
 using Android.App;
 using Android.Content;
+using Android.Graphics;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
@@ -27,6 +28,19 @@ namespace SciChartHeatmapAudio.CustomViews
         public RenderableSeriesType SeriesType { get; set; }
         public DataSeries DataSeries { get; set; }
     }
+
+    public class LineRenderableSeries : RenderableSeriesBase
+    {
+        public new XyDataSeries<int, int> DataSeries { get; set; }
+        public Color Stroke { get; set; }
+        public float StrokeThickness { get; set; }
+
+        public LineRenderableSeries()
+        {
+            SeriesType = RenderableSeriesType.Line;
+        }
+    }
+
 
     public class HeatmapRenderableSeries : RenderableSeriesBase
     {

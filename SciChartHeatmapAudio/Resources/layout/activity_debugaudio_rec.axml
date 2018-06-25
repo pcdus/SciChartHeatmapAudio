@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:columnCount="3">
+        <Button
+            android:id="@+id/rec"
+            android:text="Rec" />
+        <Button
+            android:id="@+id/stop"
+            android:text="Stop" />
+        <Button
+            android:id="@+id/play"
+            android:text="Play" />
+    </GridLayout>
+    <com.scichart.charting.visuals.SciChartSurface
+        android:id="@+id/firstChartRec"
+        android:layout_width="fill_parent"
+        android:layout_height="0px"
+        android:layout_weight="1" />
+    <com.scichart.charting.visuals.SciChartSurface
+        android:id="@+id/secondChartRec"
+        android:layout_width="fill_parent"
+        android:layout_height="0px"
+        android:layout_weight="1" />
+</LinearLayout>

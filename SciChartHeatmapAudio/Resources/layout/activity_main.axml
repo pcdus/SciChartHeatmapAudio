@@ -4,9 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <com.scichart.charting.visuals.SciChartSurface
-        android:id="@+id/sciChartSpectrogram"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1" />
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:orientation="vertical"
+        android:rowCount="3">
+        <Button
+            android:id="@+id/debugHeatpMap"
+            android:text="HeatMap sample" />
+        <Button
+            android:id="@+id/debugAudio"
+            android:text="Audio sample" />
+        <Button
+            android:id="@+id/debugAudioWithRecording"
+            android:text="Audio sample with recording" />
+    </GridLayout>
 </LinearLayout>

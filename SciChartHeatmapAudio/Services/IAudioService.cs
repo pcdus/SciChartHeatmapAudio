@@ -12,6 +12,7 @@ using Android.Widget;
 
 namespace SciChartHeatmapAudio.Services
 {
+    /*
     public interface IAudioService
     {
         event EventHandler samplesUpdated;
@@ -30,4 +31,5 @@ namespace SciChartHeatmapAudio.Services
             UpdatedSamples = samples;
         }
     }
+    */
 }

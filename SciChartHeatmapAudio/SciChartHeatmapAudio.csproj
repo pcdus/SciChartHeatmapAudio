@@ -62,11 +62,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomViews\RenderableSeriesBase.cs" />
+    <Compile Include="DebugAudioRecActivity.cs" />
+    <Compile Include="DebugAudioActivity.cs" />
     <Compile Include="DebugHeatmapActivity.cs" />
     <Compile Include="Helpers\DataManager.cs" />
+    <Compile Include="Helpers\Logger.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
+    <Compile Include="Services\AsyncAudioService.cs" />
     <Compile Include="Services\AudioService.cs" />
     <Compile Include="Services\IAudioService.cs" />
   </ItemGroup>
@@ -109,6 +113,17 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\activity_debugheatmap.axml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\activity_debugaudio.axml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\activity_debugaudio_rec.axml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
       <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>

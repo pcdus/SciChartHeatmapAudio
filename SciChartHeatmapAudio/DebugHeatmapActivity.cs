@@ -21,7 +21,6 @@ using SciChartHeatmapAudio.Helpers;
 namespace SciChartHeatmapAudio
 {
     [Activity(Label = "DebugHeatmapActivity")]
-    //[Activity(Label = "DebugHeatmapActivity", MainLauncher = true)]
     public class DebugHeatmapActivity : Activity
     {
 
@@ -44,11 +43,6 @@ namespace SciChartHeatmapAudio
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-
-            var licensingContract = @"<LicenseContract>" +
-              "</LicenseContract>";
-
-            SciChart.Charting.Visuals.SciChartSurface.SetRuntimeLicenseKey(licensingContract);
 
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.activity_debugheatmap);

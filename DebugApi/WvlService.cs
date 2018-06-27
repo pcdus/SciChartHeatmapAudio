@@ -7,25 +7,19 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using Java.IO;
-using SciChartHeatmapAudio.Helpers;
 
-namespace SciChartHeatmapAudio.Services
+
+namespace DebugApi
 {
     public class WvlService
     {
 
-        public string url = "http://api/recordings/";
+        public string url = "http://51.254.131.100/api/recordings/";
+        string fileName = @"C:\Users\pcdus\Hourrapps\OneDrive - Hourrapps\Documents\--Hourrapps\Clients\WeLoveDevs\Alexis Vlandas\SciChart support\808.wav";
 
-
-        public async Task PostAudioFile(string fileName)
+        public async Task PostAudioFile(string file)
         {
+            file = fileName;           
             Logger.Log("PostAudioFile() - fileName : " + fileName);
             using (HttpClient client = new HttpClient())
             {
@@ -94,6 +88,10 @@ namespace SciChartHeatmapAudio.Services
             Logger.Log("PostTest()");
             string servResp = "";
             string boundary = "----CustomBoundary" + DateTime.Now.Ticks.ToString("x");
+
+            byte[] b1 = FileToByteArray(fileName);
+            byte[] b2 = FileToByteArray2(fileName);
+
             Logger.Log("PostTest() - MultipartFormDataContent");
             using (var content = new MultipartFormDataContent(boundary))
             {
@@ -106,6 +104,7 @@ namespace SciChartHeatmapAudio.Services
                 content.Add(new StringContent("My machine"), "machine_name");
                 content.Add(new StringContent("My campaign"), "campaign_name");
                 content.Add(new StringContent("Pierre-Christophe"), "user_name");
+                content.Add(new ByteArrayContent(b1, 0, b1.Length), "audio_file", "audio.wav");
 
                 Logger.Log("PostTest() - HttpClientHandler");
                 HttpClientHandler handler = new HttpClientHandler();
@@ -113,7 +112,7 @@ namespace SciChartHeatmapAudio.Services
                 handler.CookieContainer = cookieContainer;
 
                 Logger.Log("PostTest() - HttpRequestMessage");
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http:///api/recordings/");
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://51.254.131.100/api/recordings/");
                 request.Headers.ExpectContinue = false;
                 request.Content = content;
 
@@ -122,6 +121,7 @@ namespace SciChartHeatmapAudio.Services
                     Logger.Log("PostTest() - HttpClient");
                     var httpClient = new HttpClient(handler);
                     HttpResponseMessage response = await httpClient.SendAsync(request);
+                    Logger.Log("PostTest() - response : " + response.ToString());
                     response.EnsureSuccessStatusCode();
 
                     servResp = await response.Content.ReadAsStringAsync();

@@ -56,6 +56,7 @@ namespace SciChartHeatmapAudio
             bufferSize = AudioRecord.GetMinBufferSize(8000,
                 Android.Media.ChannelIn.Mono,
                 Android.Media.Encoding.Pcm16bit);
+            Logger.Log("bufferSize : " + bufferSize.ToString());
         }
 
         #region Buttons
@@ -84,8 +85,8 @@ namespace SciChartHeatmapAudio
                 var wvlService = new WvlService();
                 if (wavFileName != "")
                 {
-                    //await wvlService.PostAudioFile(wavFileName);
-                    var res = await wvlService.PostTest();
+                    await wvlService.PostAudioFile(wavFileName);
+                    //var res = await wvlService.PostTest();
                 }
             };
         }
@@ -173,10 +174,10 @@ namespace SciChartHeatmapAudio
 		    recordingThread.start();
             */
 
-            System.Threading.Thread newThread = new System.Threading.Thread(new ThreadStart(
+            recordingThread = new System.Threading.Thread(new ThreadStart(
                 WriteAudioDataToFile
                 ));
-            newThread.Start();
+            recordingThread.Start();
         }
 
         private void WriteAudioDataToFile()

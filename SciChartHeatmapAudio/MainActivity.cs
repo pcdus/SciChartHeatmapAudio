@@ -27,7 +27,7 @@ namespace SciChartHeatmapAudio
             base.OnCreate(savedInstanceState);
 
             var licensingContract = @"<LicenseContract>" +
-                           "</LicenseContract>";
+
             SciChart.Charting.Visuals.SciChartSurface.SetRuntimeLicenseKey(licensingContract);
 
             // Set our view from the "main" layout resource
@@ -45,15 +45,19 @@ namespace SciChartHeatmapAudio
             };
 
             FindViewById<Button>(Resource.Id.debugAudioWithRecording).Click += delegate {
-                var activity3 = new Intent(this, typeof(DebugAudioRecActivity));
-                StartActivity(activity3);
+                var activity4 = new Intent(this, typeof(DebugAudioRecActivity));
+                StartActivity(activity4);
             };
 
             FindViewById<Button>(Resource.Id.debugAudioWavConverter).Click += delegate {
-                var activity3 = new Intent(this, typeof(DebugAudioToWavActivity));
-                StartActivity(activity3);
+                var activity5 = new Intent(this, typeof(DebugAudioToWavActivity));
+                StartActivity(activity5);
             };
-            
+
+            FindViewById<Button>(Resource.Id.debugAudioWavServiceConverter).Click += delegate {
+                var activity6 = new Intent(this, typeof(DebugAudioToWavServiceActivity));
+                StartActivity(activity6);
+            };
         }
 
     }

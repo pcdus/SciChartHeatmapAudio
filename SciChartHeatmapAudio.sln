@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2018
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SciChartHeatmapAudio", "SciChartHeatmapAudio\SciChartHeatmapAudio.csproj", "{AFDF5A49-1A40-429B-A89B-A3FEFE0259DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugApi", "DebugApi\DebugApi.csproj", "{13839CD1-07E7-4040-9BB3-AA1D371306DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,10 @@ Global
 		{AFDF5A49-1A40-429B-A89B-A3FEFE0259DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFDF5A49-1A40-429B-A89B-A3FEFE0259DD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AFDF5A49-1A40-429B-A89B-A3FEFE0259DD}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{13839CD1-07E7-4040-9BB3-AA1D371306DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13839CD1-07E7-4040-9BB3-AA1D371306DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13839CD1-07E7-4040-9BB3-AA1D371306DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13839CD1-07E7-4040-9BB3-AA1D371306DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

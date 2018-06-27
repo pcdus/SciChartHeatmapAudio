@@ -23,13 +23,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/btnStart"
-            android:text="Start recording"
+            android:text="Start"
             android:layout_weight="1.0" />
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/btnStop"
-            android:text="Stop recording"
+            android:text="Stop"
+            android:layout_weight="1.0" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnPlay"
+            android:text="Play"
             android:layout_weight="1.0" />
         <Button
             android:layout_width="wrap_content"

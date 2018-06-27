@@ -65,6 +65,7 @@
     <Compile Include="CustomViews\RenderableSeriesBase.cs" />
     <Compile Include="DebugAudioRecActivity.cs" />
     <Compile Include="DebugAudioActivity.cs" />
+    <Compile Include="DebugAudioToWavServiceActivity.cs" />
     <Compile Include="DebugHeatmapActivity.cs" />
     <Compile Include="Helpers\DataManager.cs" />
     <Compile Include="Helpers\Logger.cs" />

@@ -25,6 +25,8 @@ using System.Threading;
 using SciChartHeatmapAudio.Helpers;
 using System.Threading.Tasks;
 using SciChartHeatmapAudio.Services;
+using static SciChartHeatmapAudio.Helpers.WvlLogger;
+using SciChart.Core.Model;
 
 namespace SciChartHeatmapAudio
 {
@@ -39,11 +41,17 @@ namespace SciChartHeatmapAudio
         // DataSeries
         XyDataSeries<int, int> samplesDataSeries;
         XyDataSeries<int, int> fftDataSeries;
-        UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(width, height);
 
-        // Used for Heatmap
+        // UniformHeatmapDataSeries
+        //UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(width, height);
+        UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(new int[width, height], 0, 10000, 0, 1);
+
+
         public static int width = 1024;
         public static int height = 1024;
+        //public static int width = 128;
+        //public static int height = 1024;
+
         public int[] Data = new int[width * height];
 
         // Others
@@ -52,8 +60,14 @@ namespace SciChartHeatmapAudio
         CancellationToken token;
         int lastElement = 0;
 
+        int samplesUpdatedCount = 0;
+        int xChart1count = 0;
+        int xChart2count = 0;
+
         // AudioService
         AudioService audioService;
+
+
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -65,6 +79,7 @@ namespace SciChartHeatmapAudio
             // Initialize charts
             InitCharts();
 
+
             // Start AudioService
             token = cancelTokenSource.Token;
             Task.Run(() =>
@@ -73,6 +88,7 @@ namespace SciChartHeatmapAudio
                 audioService = new AudioService();
                 audioService.samplesUpdated += AudioService_samplesUpdated;
                 audioService.StartRecord();
+
             }, token);
         }
 
@@ -93,7 +109,7 @@ namespace SciChartHeatmapAudio
 
         private void InitFirstChart()
         {
-            Logger.Log("InitFirstChart()");
+            WvlLogger.Log(LogType.TraceAll,"InitFirstChart()");
 
             var xAxis = new NumericAxis(this)
             {
@@ -133,11 +149,12 @@ namespace SciChartHeatmapAudio
 
         private void InitSecondChart()
         {
-            Logger.Log("InitFirstChart()");
+            WvlLogger.Log(LogType.TraceAll,"InitFirstChart()");
 
             var xAxis = new NumericAxis(this)
             {
-                AutoRange = AutoRange.Always,
+                //AutoRange = AutoRange.Always,
+                AutoRange = AutoRange.Never,
                 DrawMajorBands = false,
                 DrawLabels = false,
                 DrawMajorTicks = false,
@@ -145,11 +162,13 @@ namespace SciChartHeatmapAudio
                 DrawMajorGridLines = false,
                 DrawMinorGridLines = false,
                 FlipCoordinates = true,
-                AxisAlignment = AxisAlignment.Left
+                AxisAlignment = AxisAlignment.Left,
+                //VisibleRange = new DoubleRange(0, 128)
             };
 
             var yAxis = new NumericAxis(this)
             {
+                //AutoRange = AutoRange.Always,
                 DrawMajorBands = false,
                 DrawLabels = false,
                 DrawMajorTicks = false,
@@ -157,7 +176,8 @@ namespace SciChartHeatmapAudio
                 DrawMajorGridLines = false,
                 DrawMinorGridLines = false,
                 FlipCoordinates = true,
-                AxisAlignment = AxisAlignment.Bottom
+                AxisAlignment = AxisAlignment.Bottom,
+                //VisibleRange = new DoubleRange(-300,2048)
             };
 
             // from XF sample
@@ -178,9 +198,14 @@ namespace SciChartHeatmapAudio
                 DataSeries = heatmapSeries,
                 Maximum = 70,
                 Minimum = -30,
+                //Maximum = 280,
+                //Minimum = -120,
                 ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
                     new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
                     new float[] { 0f, 0.0001f, 0.25f, 0.50f, 0.75f, 1f }
+                //ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
+                //    new int[] { Color.Transparent, Color.Yellow, Color.Orange, Color.Red, Color.Purple, Color.Black },
+                //    new float[] { 0f, 0.05f, 0.10f, 0.15f, 0.20f, 1f }
                 )
             };
 
@@ -216,13 +241,14 @@ namespace SciChartHeatmapAudio
 
         private void AudioService_samplesUpdated(object sender, System.EventArgs e)
         {
-            Logger.Log("AudioService_samplesUpdated()");
+            WvlLogger.Log(LogType.TraceAll,"AudioService_samplesUpdated()");
+            samplesUpdatedCount++;
 
             var audioService = (AudioService)sender;
 
             if (token.IsCancellationRequested)
             {
-                Logger.Log("AudioService_samplesUpdated() - token.IsCancellationRequested");
+                WvlLogger.Log(LogType.TraceAll,"AudioService_samplesUpdated() - token.IsCancellationRequested");
                 audioService.StopRecord();
                 return;
             }
@@ -231,18 +257,18 @@ namespace SciChartHeatmapAudio
 
             if (arguments != null)
             {
-                Logger.Log("AudioService_samplesUpdated() - arguments != null");
+                WvlLogger.Log(LogType.TraceAll,"AudioService_samplesUpdated() - arguments != null");
                 var samples = arguments.UpdatedSamples;
                 if (samples.Length < samplesCount)
                 {
-                    Logger.Log("AudioService_samplesUpdated() - samples.Length < samplesCount - sample.Length : " + samples.Length.ToString() + " samplesCount : " + samplesCount.ToString());
+                    WvlLogger.Log(LogType.TraceValues,"AudioService_samplesUpdated() - samples.Length < samplesCount - sample.Length : " + samples.Length.ToString() + " samplesCount : " + samplesCount.ToString());
                     return;
                 }
-                Logger.Log("AudioService_samplesUpdated() - sample.Length : " + samples.Length.ToString());
+                WvlLogger.Log(LogType.TraceValues, "AudioService_samplesUpdated() - sample.Length : " + samples.Length.ToString());
 
+                
                 //samplesDataSeries.YValues = samples;
                 UpdateSamplesDataSeries(samples);
-
                 var fftValues = audioService.FFT(samples);
 
                 //fftDataSeries.YValues = fftValues;
@@ -250,6 +276,28 @@ namespace SciChartHeatmapAudio
 
                 //heatmapSeries.AppenData(fftValues);
                 UpdateHeatmapDataSeries(fftValues);
+                
+
+                /*
+                List<int> tempSamples = new List<int>();
+                int cpt = 0;
+                foreach (var sam in samples)
+                {
+                    cpt++;
+                    if (cpt % 2 == 0)
+                        tempSamples.Add(sam);
+                }
+                int[] halfSamples = tempSamples.ToArray();
+
+                UpdateSamplesDataSeries(halfSamples);
+                var fftValues = audioService.FFT(halfSamples);
+
+                //fftDataSeries.YValues = fftValues;
+                //UpdateFFTDataSeries(fftValues);
+
+                //heatmapSeries.AppenData(fftValues);
+                UpdateHeatmapDataSeries(fftValues);
+                */
             }
         }
 
@@ -257,7 +305,10 @@ namespace SciChartHeatmapAudio
 
         private void UpdateSamplesDataSeries(int[] dataSeries)
         {
-            Logger.Log("UpdateSamplesDataSeries()");
+            WvlLogger.Log(LogType.TraceAll,"UpdateSamplesDataSeries()");
+
+
+            xChart1count = samplesUpdatedCount * dataSeries.Length;
 
             var xArray = new int[dataSeries.Length];
             for (int i = 0; i < dataSeries.Length; i++)
@@ -267,17 +318,17 @@ namespace SciChartHeatmapAudio
             try
             {
                 samplesDataSeries.Append(xArray, dataSeries);
-                Logger.Log("UpdateSamplesDataSeries() - xarray : " + xArray.Length.ToString() + " - dataSeries : " + dataSeries.Sum().ToString());
+                WvlLogger.Log(LogType.TraceValues,"UpdateSamplesDataSeries() - xarray : " + xArray.Length.ToString() + " - dataSeries : " + dataSeries.Sum().ToString());
             }
             catch (Exception e)
             {
-                Logger.Log("UpdateSamplesDataSeries() - exception : " + e.ToString());
+                WvlLogger.Log(LogType.TraceExceptions,"UpdateSamplesDataSeries() - exception : " + e.ToString());
             }
         }
 
         private void UpdateFFTDataSeries(int[] fftValues)
         {
-            Logger.Log("UpdateFFTDataSeries()");
+            WvlLogger.Log(LogType.TraceAll,"UpdateFFTDataSeries()");
 
             var xArray = new int[fftValues.Length];
             for (int i = 0; i < fftValues.Length; i++)
@@ -290,44 +341,47 @@ namespace SciChartHeatmapAudio
                 if (fftDataSeries.Count == 0)
                 {
                     fftDataSeries.Append(xArray, fftValues);
-                    Logger.Log("UpdateSamplesDataSeries() - xarray : " + xArray.Length.ToString() + " - fftValues : " + fftValues.Sum().ToString());
+                    WvlLogger.Log(LogType.TraceValues,"UpdateSamplesDataSeries() - xarray : " + xArray.Length.ToString() + " - fftValues : " + fftValues.Sum().ToString());
                 }
                 else
                 {
                     fftDataSeries.UpdateRangeYAt(0, fftValues);
-                    Logger.Log("UpdateSamplesDataSeries() - 0 - fftValues : " + fftValues.Sum().ToString());
+                    WvlLogger.Log(LogType.TraceValues,"UpdateSamplesDataSeries() - 0 - fftValues : " + fftValues.Sum().ToString());
                 }
             }
             catch (Exception e)
             {
-                Logger.Log("UpdateFFTDataSeries() - exception : " + e.ToString());
+                WvlLogger.Log(LogType.TraceExceptions,"UpdateFFTDataSeries() - exception : " + e.ToString());
             }
         }
 
         //public void AppenData(int[] data)
         public void UpdateHeatmapDataSeries(int[] data)
         {
-            Logger.Log("UpdateHeatmapDataSeries()");
-            //Logger.Log("UpdateHeatmapDataSeries - Width : " + width.ToString() + " - Height : " + height.ToString());
-            Logger.Log("UpdateHeatmapDataSeries() - Data before Array.Copy() : " + Data.Sum().ToString());
+            WvlLogger.Log(LogType.TraceAll,"UpdateHeatmapDataSeries()");
+            //WvlLogger.Log(LogType.TraceAll,"UpdateHeatmapDataSeries - Width : " + width.ToString() + " - Height : " + height.ToString());
+            WvlLogger.Log(LogType.TraceValues,"UpdateHeatmapDataSeries() - Data before Array.Copy() : " + Data.Sum().ToString());
 
             var spectrogramSize = width * height;
             var fftSize = data.Length;
             var offset = spectrogramSize - fftSize;
-            Logger.Log("UpdateHeatmapDataSeries() - set offset : " + offset.ToString());
+
+            xChart2count = samplesUpdatedCount * data.Length;
+
+            WvlLogger.Log(LogType.TraceValues,"UpdateHeatmapDataSeries() - set offset : " + offset.ToString());
 
             try
             {
                 Array.Copy(Data, fftSize, Data, 0, offset);
                 Array.Copy(data, 0, Data, offset, fftSize);
-                Logger.Log("UpdateHeatmapDataSeries() - Data after Array.Copy() : " + Data.Sum().ToString());
+                WvlLogger.Log(LogType.TraceValues,"UpdateHeatmapDataSeries() - Data after Array.Copy() : " + Data.Sum().ToString());
 
                 heatmapSeries.UpdateZValues(Data);
-                Logger.Log("UpdateSamplesDataSeries() - UpdateZValues()");
+                WvlLogger.Log(LogType.TraceAll,"UpdateSamplesDataSeries() - UpdateZValues()");
             }
             catch (Exception e)
             {
-                Logger.Log("UpdateSamplesDataSeries() - exception : " + e.ToString());
+                WvlLogger.Log(LogType.TraceExceptions,"UpdateSamplesDataSeries() - exception : " + e.ToString());
             }
         }
 

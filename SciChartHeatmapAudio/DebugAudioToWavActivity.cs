@@ -14,6 +14,7 @@ using Java.IO;
 using Java.Lang;
 using SciChartHeatmapAudio.Helpers;
 using SciChartHeatmapAudio.Services;
+using static SciChartHeatmapAudio.Helpers.WvlLogger;
 
 namespace SciChartHeatmapAudio
 {
@@ -56,31 +57,31 @@ namespace SciChartHeatmapAudio
             bufferSize = AudioRecord.GetMinBufferSize(8000,
                 Android.Media.ChannelIn.Mono,
                 Android.Media.Encoding.Pcm16bit);
-            Logger.Log("bufferSize : " + bufferSize.ToString());
+            WvlLogger.Log(LogType.TraceAll,"bufferSize : " + bufferSize.ToString());
         }
 
         #region Buttons
 
         private void SetButtonHandlers()
         {
-            Logger.Log("SetButtonHandlers()");
+            WvlLogger.Log(LogType.TraceAll,"SetButtonHandlers()");
             ((Button)FindViewById(Resource.Id.btnStart)).Click += delegate
             {
-                Logger.Log("Start Recording clicked");
+                WvlLogger.Log(LogType.TraceAll,"Start Recording clicked");
                 EnableButtons(true);
                 StartRecording();
             };
 
             ((Button)FindViewById(Resource.Id.btnStop)).Click += delegate
             {
-                Logger.Log("Start Recording clicked");
+                WvlLogger.Log(LogType.TraceAll,"Start Recording clicked");
                 EnableButtons(false);
                 StopRecording();
             };
 
             ((Button)FindViewById(Resource.Id.btnSendWav)).Click += async delegate
             {
-                Logger.Log("Send Wav clicked");
+                WvlLogger.Log(LogType.TraceAll,"Send Wav clicked");
                 EnableButtons(false);
                 var wvlService = new WvlService();
                 if (wavFileName != "")
@@ -93,13 +94,13 @@ namespace SciChartHeatmapAudio
 
         private void EnableButton(int id, bool isEnable)
         {
-            Logger.Log("EnableButton()");
+            WvlLogger.Log(LogType.TraceAll,"EnableButton()");
             ((Button)FindViewById(id)).Enabled = isEnable;
         }
 
         private void EnableButtons(bool isRecording)
         {
-            Logger.Log("EnableButtons()");
+            WvlLogger.Log(LogType.TraceAll,"EnableButtons()");
             EnableButton(Resource.Id.btnStart, !isRecording);
             EnableButton(Resource.Id.btnStop, isRecording);
         }
@@ -110,7 +111,7 @@ namespace SciChartHeatmapAudio
 
         private string GetFilename()
         {
-            Logger.Log("GetFilename()");
+            WvlLogger.Log(LogType.TraceAll,"GetFilename()");
             string filepath = Android.OS.Environment.ExternalStorageDirectory.Path;
             File file = new File(filepath, AUDIO_RECORDER_FOLDER);
 
@@ -121,13 +122,13 @@ namespace SciChartHeatmapAudio
 
             var result = (file.AbsolutePath + "/" + DateTime.Now.Millisecond.ToString() + AUDIO_RECORDER_FILE_EXT_WAV);
             wavFileName = result;
-            Logger.Log("GetFilename() : " + result);
+            WvlLogger.Log(LogType.TraceAll,"GetFilename() : " + result);
             return result;
         }
 
         private string GetTempFilename()
         {
-            Logger.Log("GetTempFilename()");
+            WvlLogger.Log(LogType.TraceAll,"GetTempFilename()");
             string filepath = Android.OS.Environment.ExternalStorageDirectory.Path;
             File file = new File(filepath, AUDIO_RECORDER_FOLDER);
 
@@ -142,7 +143,7 @@ namespace SciChartHeatmapAudio
                 tempFile.Delete();
 
             var result = (file.AbsolutePath + "/" + AUDIO_RECORDER_TEMP_FILE);
-            Logger.Log("GetTempFilename() : " + result);
+            WvlLogger.Log(LogType.TraceAll,"GetTempFilename() : " + result);
             return result;
         }
 
@@ -150,7 +151,7 @@ namespace SciChartHeatmapAudio
 
         private void StartRecording()
         {
-            Logger.Log("StartRecording()");
+            WvlLogger.Log(LogType.TraceAll,"StartRecording()");
 
             //recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
             // RECORDER_SAMPLERATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING, bufferSize);
@@ -182,7 +183,7 @@ namespace SciChartHeatmapAudio
 
         private void WriteAudioDataToFile()
         {
-            Logger.Log("WriteAudioDataToFile()");
+            WvlLogger.Log(LogType.TraceAll,"WriteAudioDataToFile()");
 
             byte[] data = new byte[bufferSize];
             string filename = GetTempFilename();
@@ -196,7 +197,7 @@ namespace SciChartHeatmapAudio
             {
                 // TODO Auto-generated catch block
                 //e.printStackTrace();
-                Logger.Log(e.ToString());
+                WvlLogger.Log(LogType.TraceExceptions,e.ToString());
             }
 
             int read = 0;
@@ -217,7 +218,7 @@ namespace SciChartHeatmapAudio
                         catch (IOException e)
                         {
                             //e.printStackTrace();
-                            Logger.Log("WriteAudioDataToFile - Exception on os.Write() : " + e.ToString());
+                            WvlLogger.Log(LogType.TraceExceptions,"WriteAudioDataToFile - Exception on os.Write() : " + e.ToString());
                         }
                     }
                 }
@@ -229,14 +230,14 @@ namespace SciChartHeatmapAudio
                 catch (IOException e)
                 {
                     //e.printStackTrace();
-                    Logger.Log("WriteAudioDataToFile - Exception on os.Close() : " + e.ToString());
+                    WvlLogger.Log(LogType.TraceExceptions,"WriteAudioDataToFile - Exception on os.Close() : " + e.ToString());
                 }
             }
         }
 
         private void StopRecording()
         {
-            Logger.Log("StopRecording()");
+            WvlLogger.Log(LogType.TraceAll,"StopRecording()");
 
             if (null != recorder)
             {
@@ -257,7 +258,7 @@ namespace SciChartHeatmapAudio
 
         private void DeleteTempFile()
         {
-            Logger.Log("DeleteTempFile()");
+            WvlLogger.Log(LogType.TraceAll,"DeleteTempFile()");
             File file = new File(GetTempFilename());
 
             file.Delete();
@@ -265,7 +266,7 @@ namespace SciChartHeatmapAudio
 
         private void CopyWaveFile(string inFilename, string outFilename)
         {
-            Logger.Log("CopyWaveFile()");
+            WvlLogger.Log(LogType.TraceAll,"CopyWaveFile()");
 
             FileInputStream fis = null;
             FileOutputStream fos = null;
@@ -286,7 +287,7 @@ namespace SciChartHeatmapAudio
                 totalAudioLen = fis.Channel.Size(); 
                 totalDataLen = totalAudioLen + 36;
 
-                Logger.Log("CopyWaveFile() - File size: " + totalDataLen.ToString());
+                WvlLogger.Log(LogType.TraceValues,"CopyWaveFile() - File size: " + totalDataLen.ToString());
 
                 WriteWaveFileHeader(fos, totalAudioLen, totalDataLen,
                     longSampleRate, channels, byteRate);
@@ -301,19 +302,19 @@ namespace SciChartHeatmapAudio
             catch (FileNotFoundException e)
             {
                 //e.printStackTrace();
-                Logger.Log("CopyWaveFile() - FileNotFoundException: " + e.ToString());
+                WvlLogger.Log(LogType.TraceExceptions,"CopyWaveFile() - FileNotFoundException: " + e.ToString());
             }
             catch (IOException e)
             {
                 //e.printStackTrace();
-                Logger.Log("CopyWaveFile() - IOException: " + e.ToString());
+                WvlLogger.Log(LogType.TraceExceptions, "CopyWaveFile() - IOException: " + e.ToString());
             }
         }
 
         private void WriteWaveFileHeader(FileOutputStream fos, long totalAudioLen,
             long totalDataLen, long longSampleRate, int channels, long byteRate) 
         {
-            Logger.Log("WriteWaveFileHeader()");
+            WvlLogger.Log(LogType.TraceAll,"WriteWaveFileHeader()");
             try
             {
                 byte[] header = new byte[44];
@@ -367,7 +368,7 @@ namespace SciChartHeatmapAudio
             }
             catch (System.Exception e)
             {
-                Logger.Log("WriteWaveFileHeader() - Exception: " + e.ToString());
+                WvlLogger.Log(LogType.TraceExceptions,"WriteWaveFileHeader() - Exception: " + e.ToString());
             }
     }
 }

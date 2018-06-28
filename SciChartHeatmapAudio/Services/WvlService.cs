@@ -15,18 +15,19 @@ using Android.Views;
 using Android.Widget;
 using Java.IO;
 using SciChartHeatmapAudio.Helpers;
+using static SciChartHeatmapAudio.Helpers.WvlLogger;
 
 namespace SciChartHeatmapAudio.Services
 {
     public class WvlService
     {
 
-        public string url = "http://api/recordings/";
+        public string url = "";
 
 
         public async Task PostAudioFile(string fileName)
         {
-            Logger.Log("PostAudioFile() - fileName : " + fileName);
+            WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - fileName : " + fileName);
             using (HttpClient client = new HttpClient())
             {
                 
@@ -51,14 +52,14 @@ namespace SciChartHeatmapAudio.Services
                 try
                 {
                     /*
-                    Logger.Log("PostAudioFile() - Create client.DefaultRequestHeaders");
+                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - Create client.DefaultRequestHeaders");
                     client.DefaultRequestHeaders.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("multipart/form-data"));
                     client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "multipart/form-data");
                     */
                     //client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
 
-                    Logger.Log("PostAudioFile() - MultipartFormDataContent");
+                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - MultipartFormDataContent");
 
                     byte[] b1 = FileToByteArray(fileName);
                     byte[] b2 = FileToByteArray2(fileName);
@@ -71,14 +72,14 @@ namespace SciChartHeatmapAudio.Services
                     formData.Add(new StringContent("Pierre-Christophe"), "user_name");
                     formData.Add(new ByteArrayContent(b1, 0, b1.Length), "audio_file", "audio.wav");
 
-                    Logger.Log("PostAudioFile() - client.PostAsync()");
+                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - client.PostAsync()");
                     var responseObj = await client.PostAsync(url, formData);
 
-                    Logger.Log("PostAudioFile() - Response : " + responseObj.ToString());
+                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - Response : " + responseObj.ToString());
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log("PostAudioFile() - Exception : " + ex.ToString());
+                    WvlLogger.Log(LogType.TraceExceptions,"PostAudioFile() - Exception : " + ex.ToString());
                 }
 
             }
@@ -91,35 +92,35 @@ namespace SciChartHeatmapAudio.Services
         /// <returns></returns>
         public async Task<string> PostTest()
         {
-            Logger.Log("PostTest()");
+            WvlLogger.Log(LogType.TraceAll,"PostTest()");
             string servResp = "";
             string boundary = "----CustomBoundary" + DateTime.Now.Ticks.ToString("x");
-            Logger.Log("PostTest() - MultipartFormDataContent");
+            WvlLogger.Log(LogType.TraceAll,"PostTest() - MultipartFormDataContent");
             using (var content = new MultipartFormDataContent(boundary))
             {
-                Logger.Log("PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // "  + content.Headers.ToString());
+                WvlLogger.Log(LogType.TraceValues,"PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // "  + content.Headers.ToString());
                 content.Headers.Remove("Content-Type");
                 content.Headers.TryAddWithoutValidation("Content-Type", "multipart/form-data; boundary=" + boundary);
-                Logger.Log("PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // " + content.Headers.ToString());
+                WvlLogger.Log(LogType.TraceValues, "PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // " + content.Headers.ToString());
 
                 content.Add(new StringContent("rotating_machine"), "machine_type");
                 content.Add(new StringContent("My machine"), "machine_name");
                 content.Add(new StringContent("My campaign"), "campaign_name");
                 content.Add(new StringContent("Pierre-Christophe"), "user_name");
 
-                Logger.Log("PostTest() - HttpClientHandler");
+                WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpClientHandler");
                 HttpClientHandler handler = new HttpClientHandler();
                 var cookieContainer = new CookieContainer();
                 handler.CookieContainer = cookieContainer;
 
-                Logger.Log("PostTest() - HttpRequestMessage");
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http:///api/recordings/");
+                WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpRequestMessage");
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "");
                 request.Headers.ExpectContinue = false;
                 request.Content = content;
 
                 try
                 {
-                    Logger.Log("PostTest() - HttpClient");
+                    WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpClient");
                     var httpClient = new HttpClient(handler);
                     HttpResponseMessage response = await httpClient.SendAsync(request);
                     response.EnsureSuccessStatusCode();
@@ -128,7 +129,7 @@ namespace SciChartHeatmapAudio.Services
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log("PostTest() - Exception : " + ex.ToString());
+                    WvlLogger.Log(LogType.TraceExceptions,"PostTest() - Exception : " + ex.ToString());
                 }
             }
 
@@ -137,12 +138,12 @@ namespace SciChartHeatmapAudio.Services
 
         async Task Post3(string fileName)
         {
-            Logger.Log("Post3()");
+            WvlLogger.Log(LogType.TraceAll,"Post3()");
             using (var client = new HttpClient())
             {
                 using (var content = new MultipartFormDataContent())
                 {
-                    Logger.Log("Post3() - KeyValuePair");
+                    WvlLogger.Log(LogType.TraceAll,"Post3() - KeyValuePair");
                     var values = new []
                     {
                         new KeyValuePair<string, string>("rotating_machine", "machine_type"),
@@ -156,7 +157,7 @@ namespace SciChartHeatmapAudio.Services
                         content.Add(new StringContent(keyValuePair.Value), keyValuePair.Key);
                     }
 
-                    Logger.Log("Post3() - fileContent");
+                    WvlLogger.Log(LogType.TraceAll,"Post3() - fileContent");
                     var fileContent = new ByteArrayContent(System.IO.File.ReadAllBytes(fileName));
                     fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
                     {
@@ -166,13 +167,13 @@ namespace SciChartHeatmapAudio.Services
 
                     try
                     {
-                        Logger.Log("Post3() - PostAsync()");
+                        WvlLogger.Log(LogType.TraceAll,"Post3() - PostAsync()");
                         var result = client.PostAsync(url, content).Result;
-                        Logger.Log("Post3() - result : " + result.ToString());
+                        WvlLogger.Log(LogType.TraceValues,"Post3() - result : " + result.ToString());
                     }
                     catch (Exception ex)
                     {
-                        Logger.Log("Post3() - Exception : " + ex.ToString());
+                        WvlLogger.Log(LogType.TraceExceptions,"Post3() - Exception : " + ex.ToString());
                     }
                 }
             }
@@ -180,20 +181,20 @@ namespace SciChartHeatmapAudio.Services
 
         private byte[] FileToByteArray(string fullFilePath)
         {
-            Logger.Log("FileToByteArray()");
+            WvlLogger.Log(LogType.TraceAll,"FileToByteArray()");
             FileStream fs = System.IO.File.OpenRead(fullFilePath);
             byte[] bytes = new byte[fs.Length];
             fs.Read(bytes, 0, Convert.ToInt32(fs.Length));
             fs.Close();
-            Logger.Log("FileToByteArray() - bytes : " + bytes.Length.ToString());
+            WvlLogger.Log(LogType.TraceValues,"FileToByteArray() - bytes : " + bytes.Length.ToString());
             return bytes;
         }
 
         private byte[] FileToByteArray2(string fullFilePath)
         {
-            Logger.Log("FileToByteArray2()");
+            WvlLogger.Log(LogType.TraceAll,"FileToByteArray2()");
             byte[] bytes = System.IO.File.ReadAllBytes(fullFilePath);
-            Logger.Log("FileToByteArray2() - bytes : " + bytes.Length.ToString());
+            WvlLogger.Log(LogType.TraceValues, "FileToByteArray2() - bytes : " + bytes.Length.ToString());
             return bytes;
         }
 

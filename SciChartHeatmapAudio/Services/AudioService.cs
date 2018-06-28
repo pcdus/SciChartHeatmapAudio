@@ -12,6 +12,8 @@ using Android.Views;
 using Android.Widget;
 using SciChartHeatmapAudio.Helpers;
 
+using static SciChartHeatmapAudio.Helpers.WvlLogger;
+
 namespace SciChartHeatmapAudio.Services
 {
     //public class AudioService : IAudioService
@@ -28,7 +30,7 @@ namespace SciChartHeatmapAudio.Services
 
         public int[] FFT(int[] y)
         {
-            Logger.Log("FFT()");
+            WvlLogger.Log(LogType.TraceAll,"FFT()");
             var input = new AForge.Math.Complex[y.Length];
 
             for (int i = 0; i < y.Length; i++)
@@ -57,14 +59,22 @@ namespace SciChartHeatmapAudio.Services
 
         public void StartRecord()
         {
-            Logger.Log("StartRecord()");
+            WvlLogger.Log(LogType.TraceAll,"StartRecord()");
             if (audioRecord == null)
             {
 
                 //audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Encoding.Pcm16bit, 2048 * sizeof(byte));
                 audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Android.Media.Encoding.Pcm16bit, buffer);
+                WvlLogger.Log(LogType.TraceAll, "StartRecord() - AudioRecord : " + AudioSource.Mic.ToString() + 
+                                                            " - SampleRateInHz : 44100" + 
+                                                            " - ChannelIn : " + ChannelIn.Mono.ToString() + 
+                                                            " - Encoding : " + Android.Media.Encoding.Pcm16bit.ToString() + 
+                                                            " - buffer : "  + buffer.ToString());
                 if (audioRecord.State != State.Initialized)
+                {
+                    WvlLogger.Log(LogType.TraceExceptions,  "StartRecord() - InvalidOperationException : This device doesn't support AudioRecord");
                     throw new InvalidOperationException("This device doesn't support AudioRecord");
+                }
             }
 
             //audioRecord.SetRecordPositionUpdateListener()
@@ -86,18 +96,20 @@ namespace SciChartHeatmapAudio.Services
 
         public void StopRecord()
         {
-            Logger.Log("StopRecord()");
+            WvlLogger.Log(LogType.TraceAll,"StopRecord()");
             audioRecord.Stop();
             audioRecord = null;
         }
 
         void OnNext()
         {
-            Logger.Log("OnNext()");
+            WvlLogger.Log(LogType.TraceAll,"OnNext()");
             short[] audioBuffer = new short[2048];
+            WvlLogger.Log(LogType.TraceValues, "OnNext() - audioRecord.Read - audioBuffer.Length : " + audioBuffer.Length.ToString());
             audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
 
             int[] result = new int[audioBuffer.Length];
+
             for (int i = 0; i < audioBuffer.Length; i++)
             {
                 result[i] = (int)audioBuffer[i];
@@ -116,7 +128,8 @@ namespace SciChartHeatmapAudio.Services
 
         public SamplesUpdatedEventArgs(int[] samples)
         {
-            Logger.Log("SamplesUpdatedEventArgs()");
+            WvlLogger.Log(LogType.TraceAll,"SamplesUpdatedEventArgs()");
+            WvlLogger.Log(LogType.TraceValues, "SamplesUpdatedEventArgs() - samples : " + samples.Sum().ToString());
             UpdatedSamples = samples;
         }
     }

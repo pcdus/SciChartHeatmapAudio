@@ -15,6 +15,8 @@ using Android.Views;
 using Android.Widget;
 using SciChartHeatmapAudio.Helpers;
 
+using static SciChartHeatmapAudio.Helpers.WvlLogger;
+
 namespace SciChartHeatmapAudio.Services
 {
     public class AsyncAudioService
@@ -24,22 +26,28 @@ namespace SciChartHeatmapAudio.Services
         public event EventHandler samplesUpdated;
 
         // new
-        int buffer = 2048 * sizeof(byte);
+        int bufferSize = 2048 * sizeof(byte);
+        byte[] buffer;
 
         // record file
-        ////static string filePath = "/data/data/SciChartHeatmapAudio.SciChartHeatmapAudio/files/testAudio.mp4";
-        static string filePath = "/data/testAudio.mp4";
-        static string fileName = "testAudio.mp4";
+        //static string filePath = "/data/data/SciChartHeatmapAudio.SciChartHeatmapAudio/files/testAudio.mp4";
+        static string fileName = "record_temp.raw";
+        private static string AUDIO_RECORDER_TEMP_FILE = "record_temp.raw";
+        private static string AUDIO_RECORDER_FOLDER = "AudioRecorder";
+
+
         //byte[] audioBuffer = null;
         byte[] audioBuffer = new byte[2048];
         bool endRecording = false;
         bool isRecording = false;
 
+        AudioTrack audioTrack = null;
+
         #region FFT
 
         public int[] FFT(int[] y)
         {
-            Logger.Log("FFT()");
+            WvlLogger.Log(LogType.TraceAll,"FFT()");
             var input = new AForge.Math.Complex[y.Length];
 
             for (int i = 0; i < y.Length; i++)
@@ -66,13 +74,16 @@ namespace SciChartHeatmapAudio.Services
 
         public async Task StartRecordAsync()
         {
-            Logger.Log("StartRecordAsync()");
+            WvlLogger.Log(LogType.TraceAll,"StartRecordAsync()");
             if (audioRecord == null)
             {
                 //audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Encoding.Pcm16bit, 2048 * sizeof(byte));
-                audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Android.Media.Encoding.Pcm16bit, buffer);
+                audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Android.Media.Encoding.Pcm16bit, bufferSize);
                 if (audioRecord.State != State.Initialized)
+                {
+                    WvlLogger.Log(LogType.TraceExceptions, "This device doesn't support AudioRecord");
                     throw new InvalidOperationException("This device doesn't support AudioRecord");
+                }
             }
 
             //audioRecord.SetRecordPositionUpdateListener()
@@ -101,7 +112,7 @@ namespace SciChartHeatmapAudio.Services
         //public async Task StopRecordAsync()
         public void StopRecord()
         {
-            Logger.Log("StopRecordAsync()");
+            WvlLogger.Log(LogType.TraceAll,"StopRecordAsync()");
             endRecording = true;
             Thread.Sleep(250); // Give it time to drop out.
             /*
@@ -112,7 +123,7 @@ namespace SciChartHeatmapAudio.Services
 
         void OnNext()
         {
-            Logger.Log("OnNext()");
+            WvlLogger.Log(LogType.TraceAll,"OnNext()");
             short[] audioBuffer = new short[2048];
             audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
 
@@ -134,12 +145,13 @@ namespace SciChartHeatmapAudio.Services
         /// <returns></returns>
         async Task SaveRecordAsync()
         {
-            Logger.Log("SaveRecordAsync()");
+            WvlLogger.Log(LogType.TraceAll,"SaveRecordAsync()");
+            var filePath = GetTempFilename();
             using (var fileStream = new FileStream(filePath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
             {
                 while (true)
                 {
-                    Logger.Log("SaveRecordAsync() - while true");
+                    WvlLogger.Log(LogType.TraceAll,"SaveRecordAsync() - while true");
                     if (endRecording)
                     {
                         endRecording = false;
@@ -157,27 +169,34 @@ namespace SciChartHeatmapAudio.Services
                         */
 
                         // custom
-                        short[] audioBuffer = new short[2048];
+                        //short[] audioBuffer = new short[2048];
                         // Keep reading the buffer while there is audio input.
                         int numBytes = await audioRecord.ReadAsync(audioBuffer, 0, audioBuffer.Length);
-                        //await fileStream.WriteAsync(audioBuffer, 0, numBytes);
+                        WvlLogger.Log(LogType.TraceValues, "SaveRecordAsync() - audioRecord.ReadAsync() - audioBuffer.Length : " + audioBuffer.Length.ToString() +
+                                                                                                       " - numBytes : " + numBytes.ToString());
+                        await fileStream.WriteAsync(audioBuffer, 0, numBytes);
+
                         byte[] fileAudioBuffer = new byte[audioBuffer.Length * sizeof(short)];
-                        fileStream.Write(fileAudioBuffer, 0, numBytes);
+                        WvlLogger.Log(LogType.TraceValues, "SaveRecordAsync() - audioRecord.ReadAsync() - fileAudioBuffer.Length : " + fileAudioBuffer.Length.ToString());
                         // Do something with the audio input.
 
+
+                        
                         // OnNext
-                        Logger.Log("EmbeddedOnNext()");
+                        //OnNext();
+                        /*
+                        WvlLogger.Log(LogType.TraceAll,"EmbeddedOnNext()");
                         int[] result = new int[audioBuffer.Length];
                         for (int i = 0; i < audioBuffer.Length; i++)
                         {
                             result[i] = (int)audioBuffer[i];
                         }
                         samplesUpdated(this, new SamplesUpdatedEventArgs(result));
-
+                        */
                     }
                     catch (Exception ex)
                     {
-                        Logger.Log("SaveRecordAsync() - Exception : " + ex.ToString());
+                        WvlLogger.Log(LogType.TraceExceptions,"SaveRecordAsync() - Exception : " + ex.ToString());
                         Console.Out.WriteLine(ex.Message);
                         break;
                     }
@@ -190,5 +209,92 @@ namespace SciChartHeatmapAudio.Services
 
             //RaiseRecordingStateChangedEvent();
         }
+
+        private string GetTempFilename()
+        {
+            WvlLogger.Log(LogType.TraceAll, "GetTempFilename()");
+            string filepath = Android.OS.Environment.ExternalStorageDirectory.Path;
+            Java.IO.File file = new Java.IO.File(filepath, AUDIO_RECORDER_FOLDER);
+
+            if (!file.Exists())
+            {
+                file.Mkdirs();
+            }
+
+            Java.IO.File tempFile = new Java.IO.File(filepath, AUDIO_RECORDER_TEMP_FILE);
+
+            if (tempFile.Exists())
+                tempFile.Delete();
+
+            var result = (file.AbsolutePath + "/" + AUDIO_RECORDER_TEMP_FILE);
+            WvlLogger.Log(LogType.TraceAll, "GetTempFilename() : " + result);
+            return result;
+        }
+
+        #region -> Playing
+
+        public async Task StartPlaying()
+        {
+            WvlLogger.Log(LogType.TraceAll, "StartPlaying()");
+
+            string filePath = GetTempFilename();
+            FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            long totalBytes = new System.IO.FileInfo(filePath).Length;
+            buffer = binaryReader.ReadBytes((Int32)totalBytes);
+            fileStream.Close();
+            fileStream.Dispose();
+            binaryReader.Close();
+
+            WvlLogger.Log(LogType.TraceValues, "StartPlaying() - " +
+                   " fileStream: " + fileStream.Name +
+                   " totalBytes: " + totalBytes.ToString());
+            await PlayAudioTrackAsync();
+        }
+
+        protected async Task PlayAudioTrackAsync()
+        {
+            WvlLogger.Log(LogType.TraceAll, "PlayAudioTrackAsync()");
+            WvlLogger.Log(LogType.TraceValues, "PlayAudioTrackAsync() - buffer.Length : " + buffer.Length.ToString());
+
+            audioTrack = new AudioTrack(
+                // Stream type
+                Android.Media.Stream.Music,
+                // Frequency
+                44100,
+                // Mono or stereo
+                ChannelOut.Mono,
+                // Audio encoding
+                Android.Media.Encoding.Pcm16bit,
+                // Length of the audio clip.
+                buffer.Length,
+                // Mode. Stream or static.
+                AudioTrackMode.Stream);
+
+            try
+            {
+                audioTrack.Play();
+            }
+            catch (Exception ex)
+            {
+                WvlLogger.Log(LogType.TraceAll, "PlayAudioTrackAsync() - audioTrack.Play() excetion : " + ex.ToString());
+            }
+
+            //await audioTrack.WriteAsync(buffer, 0, buffer.Length);
+            await audioTrack.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        public void StopPlaying()
+        {
+            WvlLogger.Log(LogType.TraceAll, "StopPlaying()");
+            if (audioTrack != null)
+            {
+                audioTrack.Stop();
+                audioTrack.Release();
+                audioTrack = null;
+            }
+        }
+
+        #endregion
     }
 }

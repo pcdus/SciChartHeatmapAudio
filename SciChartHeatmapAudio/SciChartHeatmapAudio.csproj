@@ -68,7 +68,7 @@
     <Compile Include="DebugAudioToWavServiceActivity.cs" />
     <Compile Include="DebugHeatmapActivity.cs" />
     <Compile Include="Helpers\DataManager.cs" />
-    <Compile Include="Helpers\Logger.cs" />
+    <Compile Include="Helpers\WvlLogger.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DebugAudioToWavActivity.cs" />

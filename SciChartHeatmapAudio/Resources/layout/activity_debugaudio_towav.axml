@@ -15,6 +15,16 @@
         android:text="AudioRecord to wav"
         android:layout_weight="1.0"
         android:textSize="20dip" />
+    <com.scichart.charting.visuals.SciChartSurface
+        android:id="@+id/firstChartRec"
+        android:layout_width="fill_parent"
+        android:layout_height="0px"
+        android:layout_weight="1" />
+    <com.scichart.charting.visuals.SciChartSurface
+        android:id="@+id/secondChartRec"
+        android:layout_width="fill_parent"
+        android:layout_height="0px"
+        android:layout_weight="1" />
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"

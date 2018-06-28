@@ -28,6 +28,7 @@ namespace SciChartHeatmapAudio
 
             var licensingContract = @"<LicenseContract>" +
 
+                           "</LicenseContract>";
             SciChart.Charting.Visuals.SciChartSurface.SetRuntimeLicenseKey(licensingContract);
 
             // Set our view from the "main" layout resource

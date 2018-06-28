@@ -153,8 +153,8 @@ namespace SciChartHeatmapAudio
 
             var xAxis = new NumericAxis(this)
             {
-                //AutoRange = AutoRange.Always,
-                AutoRange = AutoRange.Never,
+                AutoRange = AutoRange.Always,
+                //AutoRange = AutoRange.Never,
                 DrawMajorBands = false,
                 DrawLabels = false,
                 DrawMajorTicks = false,
@@ -163,12 +163,15 @@ namespace SciChartHeatmapAudio
                 DrawMinorGridLines = false,
                 FlipCoordinates = true,
                 AxisAlignment = AxisAlignment.Left,
+                //VisibleRange = new DoubleRange(0, 10)
+                //VisibleRange = new DoubleRange(0, 5)
                 //VisibleRange = new DoubleRange(0, 128)
             };
 
             var yAxis = new NumericAxis(this)
             {
-                //AutoRange = AutoRange.Always,
+                AutoRange = AutoRange.Always,
+                //AutoRange = AutoRange.Never,
                 DrawMajorBands = false,
                 DrawLabels = false,
                 DrawMajorTicks = false,
@@ -177,6 +180,8 @@ namespace SciChartHeatmapAudio
                 DrawMinorGridLines = false,
                 FlipCoordinates = true,
                 AxisAlignment = AxisAlignment.Bottom,
+                //VisibleRange = new DoubleRange(0, 10000)
+                //VisibleRange = new DoubleRange(-3000, 20000)
                 //VisibleRange = new DoubleRange(-300,2048)
             };
 
@@ -188,11 +193,11 @@ namespace SciChartHeatmapAudio
                 ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
                     new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
                     new float[] { 0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f }
-                )
+                    )
             };
-           */
+            */       
 
-            // from Android sample
+            // from Android.Kotlin sample
             var rs = new FastUniformHeatmapRenderableSeries
             {
                 DataSeries = heatmapSeries,
@@ -208,6 +213,7 @@ namespace SciChartHeatmapAudio
                 //    new float[] { 0f, 0.05f, 0.10f, 0.15f, 0.20f, 1f }
                 )
             };
+            
 
             #region Zoom and Pan
 

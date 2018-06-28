@@ -22,7 +22,7 @@ namespace SciChartHeatmapAudio.Services
     public class WvlService
     {
 
-        public string url = "";
+        public string url = "http://";
 
 
         public async Task PostAudioFile(string fileName)
@@ -114,7 +114,7 @@ namespace SciChartHeatmapAudio.Services
                 handler.CookieContainer = cookieContainer;
 
                 WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpRequestMessage");
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "");
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://");
                 request.Headers.ExpectContinue = false;
                 request.Content = content;
 

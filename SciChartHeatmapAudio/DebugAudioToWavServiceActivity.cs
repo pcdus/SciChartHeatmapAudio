@@ -136,7 +136,8 @@ namespace SciChartHeatmapAudio
                 var wvlService = new WvlService();
                 if (wavFileName != "")
                 {
-                    await wvlService.PostAudioFile(wavFileName);
+                    //await wvlService.PostAudioFile(wavFileName);
+                    await wvlService.PostAudioFile();
                     //var res = await wvlService.PostTest();
                 }
             };

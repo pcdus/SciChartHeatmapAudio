@@ -27,6 +27,9 @@ namespace SciChartHeatmapAudio.Services
 
         // AudiRecord
         AudioRecord audioRecord;
+        AudioRecord audioRecordCharts;
+        //CloneableAudioRecord audioRecord;
+        //CloneableAudioRecord audioRecordCharts;
         private static int RECORDER_BPP = 16;
         private static int RECORDER_SAMPLERATE = 44100;
         //private static int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_STEREO;        
@@ -47,7 +50,10 @@ namespace SciChartHeatmapAudio.Services
 
 
         private System.Threading.Thread recordingThread = null;
+        private System.Threading.Thread chartsThread = null;
+
         int bufferSize = 2048 * sizeof(byte);
+        //int bufferSize = 1024 * sizeof(byte);
         byte[] buffer;
         AudioTrack audioTrack = null;
 
@@ -86,8 +92,10 @@ namespace SciChartHeatmapAudio.Services
         {
             WvlLogger.Log(LogType.TraceAll, "OnNext()");
             short[] audioBuffer = new short[2048];
-            audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
-
+            //short[] audioBuffer = new short[1024];
+            //audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
+            audioRecordCharts.Read(audioBuffer, 0, audioBuffer.Length);
+            WvlLogger.Log(LogType.TraceValues, "OnNext() - audioRecordCharts.Read() - audioBUffer : " + audioBuffer.Length.ToString());
             int[] result = new int[audioBuffer.Length];
             for (int i = 0; i < audioBuffer.Length; i++)
             {
@@ -102,6 +110,7 @@ namespace SciChartHeatmapAudio.Services
         //public void StartRecording()
         public async Task StartRecording()
         {
+
             
             WvlLogger.Log(LogType.TraceAll,"StartRecording()");
 
@@ -121,13 +130,20 @@ namespace SciChartHeatmapAudio.Services
                                                         " - Encoding : " + RECORDER_AUDIO_ENCODING.ToString() +
                                                         " - buffer : " + bufferSize.ToString());
 
+
+            audioRecordCharts = audioRecord;
             /*
             int i = (int)audioRecord.State;
             if (i == 1)
             */
             if (audioRecord.State == State.Initialized)
+            {
                 audioRecord.StartRecording();
-
+            }
+            if (audioRecordCharts.State == State.Initialized)
+            {
+                audioRecordCharts.StartRecording();
+            }
             isRecording = true;
 
             /*
@@ -141,14 +157,16 @@ namespace SciChartHeatmapAudio.Services
 		    recordingThread.start();
             */
 
-
+            //audioRecordCharts = (CloneableAudioRecord)audioRecord.Clone();
 
             recordingThread = new System.Threading.Thread(new ThreadStart(
                 WriteAudioDataToFile
+                ));            
+            chartsThread = new System.Threading.Thread(new ThreadStart(
+                RepeatOnNext
                 ));
             recordingThread.Start();
-            
-
+            chartsThread.Start();
             /*
             while (audioRecord.RecordingState == RecordState.Recording)
             {
@@ -162,6 +180,21 @@ namespace SciChartHeatmapAudio.Services
                 }
             }
             */
+        }
+
+        private void RepeatOnNext()
+        {
+            while (audioRecordCharts != null && audioRecordCharts.RecordingState == RecordState.Recording)
+            {
+                try
+                {
+                    OnNext();
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
         }
 
         public void StopRecording()
@@ -181,6 +214,16 @@ namespace SciChartHeatmapAudio.Services
 
                 audioRecord = null;
                 recordingThread = null;
+            }
+
+            if (null != audioRecordCharts)
+            {
+                if (audioRecordCharts.State == State.Initialized)
+                    audioRecordCharts.Stop();
+                audioRecordCharts.Release();
+
+                audioRecordCharts = null;
+                chartsThread = null;
             }
 
             CopyWaveFile(GetTempFilename(), GetFilename());
@@ -347,8 +390,8 @@ namespace SciChartHeatmapAudio.Services
                             fos.Write(dataByte);
                             */
 
-                            // dataShort = short[]   
-                            
+                            /*
+                            // dataShort = short[]                               
                             short[] dataShort = new short[bufferSize];
                             dataShort = Array.ConvertAll(data, d => (short)d);
                             int[] result = new int[dataShort.Length];
@@ -357,7 +400,7 @@ namespace SciChartHeatmapAudio.Services
                                 result[i] = (int)dataShort[i];
                             }                   
                             samplesUpdated(this, new SamplesUpdatedEventArgs(result));
-                            
+                            */
                         }
                         catch (Java.IO.IOException e)
                         {
@@ -379,6 +422,124 @@ namespace SciChartHeatmapAudio.Services
             }
         }
 
+        private void WriteAudioDataToFileAfterRecording()
+        {
+            WvlLogger.Log(LogType.TraceAll, "WriteAudioDataToFileAfterRecording()");
+
+            byte[] data = new byte[bufferSize];
+            //short[] data = new short[bufferSize];
+            string filename = GetTempFilename();
+            FileOutputStream fos = null;
+
+            try
+            {
+                fos = new FileOutputStream(filename);
+            }
+            catch (Java.IO.FileNotFoundException e)
+            {
+                // TODO Auto-generated catch block
+                //e.printStackTrace();
+                WvlLogger.Log(LogType.TraceExceptions, e.ToString());
+            }
+
+            int read = 0;
+
+            if (null != fos)
+            {
+                //audioRecordCharts.
+                while (isRecording)
+                {
+                    //WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFile() - audioRecord.Read - bufferSize : " + bufferSize.ToString());
+                    read = audioRecordCharts.Read(data, 0, bufferSize);
+                    WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFileAfterRecording() - audioRecord.Read() " +
+                                                        " - data : " + data.Length.ToString() +
+                                                        " - bufferSize : " + bufferSize.ToString() +
+                                                        " - read : " + read.ToString());
+
+                    // OnNext
+                    //WvlLogger.Log(LogType.TraceAll, "EmbeddedOnNext()");
+
+                    /*
+                    audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
+
+                    int[] result = new int[bufferSize];
+                    short[] shortByte = Array.ConvertAll(data, b => (short)b);
+                    for (int i = 0; i < bufferSize; i++)
+                    {
+                        result[i] = (int)shortByte[i];
+                    }
+                    */
+
+                    // data = short[]   
+                    /*
+                    int[] result = new int[data.Length];
+                    for (int i = 0; i < data.Length; i++)
+                    {
+                        result[i] = (int)data[i];
+                    }                   
+                    samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+                    */
+
+                    // dataShort = short[]   
+                    /*
+                    short[] dataShort = new short[bufferSize];
+                    dataShort = Array.ConvertAll(data, d => (short)d);
+                    int[] result = new int[dataShort.Length];
+                    for (int i = 0; i < dataShort.Length; i++)
+                    {
+                        result[i] = (int)dataShort[i];
+                    }                   
+                    samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+                    */
+
+                    //if (AudioRecord.ERROR_INVALID_OPERATION != read)
+                    if ((int)RecordStatus.ErrorInvalidOperation != read)
+                    {
+                        try
+                        {
+                            // data = byte[]
+                            WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFileAfterRecording() - fos.Write(dataByte) " +
+                                        " - dataByte : " + data.Length.ToString());
+                            fos.Write(data);
+                            // dataByte = byte[]
+                            /*
+                            byte[] dataByte = Array.ConvertAll(data, item => (byte)item);
+                            WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFile() - fos.Write(dataByte) " +
+                                         " - dataByte : " + dataByte.Length.ToString());
+                            fos.Write(dataByte);
+                            */
+
+                            /*
+                            // dataShort = short[]                               
+                            short[] dataShort = new short[bufferSize];
+                            dataShort = Array.ConvertAll(data, d => (short)d);
+                            int[] result = new int[dataShort.Length];
+                            for (int i = 0; i < dataShort.Length; i++)
+                            {
+                                result[i] = (int)dataShort[i];
+                            }                   
+                            samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+                            */
+                        }
+                        catch (Java.IO.IOException e)
+                        {
+                            //e.printStackTrace();
+                            WvlLogger.Log(LogType.TraceExceptions, "WriteAudioDataToFileAfterRecording - Exception on fos.Write() : " + e.ToString());
+                        }
+                    }
+                }
+
+                try
+                {
+                    fos.Close();
+                }
+                catch (Java.IO.IOException e)
+                {
+                    //e.printStackTrace();
+                    WvlLogger.Log(LogType.TraceExceptions, "WriteAudioDataToFileAfterRecording - Exception on fos.Close() : " + e.ToString());
+                }
+            }
+        }
         private void DeleteTempFile()
         {
             WvlLogger.Log(LogType.TraceAll,"DeleteTempFile()");

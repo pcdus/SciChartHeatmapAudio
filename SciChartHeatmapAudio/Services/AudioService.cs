@@ -23,16 +23,22 @@ namespace SciChartHeatmapAudio.Services
         AudioRecord audioRecord;
         public event EventHandler samplesUpdated;
 
+        int debugMin = 0;
+        int debugMax = 0;
+
         // new
-        int buffer = 2048 * sizeof(byte);
+        //int buffer = 2048 * sizeof(byte);
+        int buffer = 1024 * sizeof(byte);
 
         #region FFT
 
         public int[] FFT(int[] y)
         {
             WvlLogger.Log(LogType.TraceAll,"FFT()");
-            var input = new AForge.Math.Complex[y.Length];
+            WvlLogger.Log(LogType.TraceValues, "FFT() - int[] y.length : " + y.Length.ToString() + "y.Sum : " + y.Sum().ToString());
 
+
+            var input = new AForge.Math.Complex[y.Length];
             for (int i = 0; i < y.Length; i++)
             {
                 input[i] = new AForge.Math.Complex(y[i], 0);
@@ -50,7 +56,21 @@ namespace SciChartHeatmapAudio.Services
                 result[i] = (int)current;
             }
 
+
+            // debug
+            /*
+            int myMin = 0;
+            int myMax = 0;
+            myMin = result.Min();
+            myMax = result.Max();
+            debugMin = (debugMin <= myMin) ? debugMin : myMin;
+            debugMax = (debugMax >= myMax) ? debugMax : myMax;
+            */
+
+            WvlLogger.Log(LogType.TraceValues, "FFT() - result : " + result.Length.ToString() + "y.Sum : " + result.Sum().ToString());
             return result;
+
+
         }
 
         #endregion
@@ -104,7 +124,8 @@ namespace SciChartHeatmapAudio.Services
         void OnNext()
         {
             WvlLogger.Log(LogType.TraceAll,"OnNext()");
-            short[] audioBuffer = new short[2048];
+            //short[] audioBuffer = new short[2048];
+            short[] audioBuffer = new short[1024];
             WvlLogger.Log(LogType.TraceValues, "OnNext() - audioRecord.Read - audioBuffer.Length : " + audioBuffer.Length.ToString());
             audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
 

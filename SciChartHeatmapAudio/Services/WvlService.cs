@@ -22,10 +22,10 @@ namespace SciChartHeatmapAudio.Services
     public class WvlService
     {
 
-        public string url = "http://";
+        public string url = "http://51.254.131.100/api/recordings/";
 
 
-        public async Task PostAudioFile(string fileName)
+        public async Task PostAudioFile(string fileName = null)
         {
             WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - fileName : " + fileName);
             using (HttpClient client = new HttpClient())
@@ -60,6 +60,7 @@ namespace SciChartHeatmapAudio.Services
                     //client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
 
                     WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - MultipartFormDataContent");
+                    fileName = FilesHelper.GetFilename();
 
                     byte[] b1 = FileToByteArray(fileName);
                     byte[] b2 = FileToByteArray2(fileName);
@@ -72,9 +73,9 @@ namespace SciChartHeatmapAudio.Services
                     formData.Add(new StringContent("Pierre-Christophe"), "user_name");
                     formData.Add(new ByteArrayContent(b1, 0, b1.Length), "audio_file", "audio.wav");
 
-                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - client.PostAsync()");
-                    var responseObj = await client.PostAsync(url, formData);
 
+                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - client.PostAsync()");
+                    var responseObj = await client.PostAsync(url, formData).ConfigureAwait(false);
                     WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - Response : " + responseObj.ToString());
                 }
                 catch (Exception ex)
@@ -114,7 +115,7 @@ namespace SciChartHeatmapAudio.Services
                 handler.CookieContainer = cookieContainer;
 
                 WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpRequestMessage");
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://");
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://51.254.131.100/api/recordings/");
                 request.Headers.ExpectContinue = false;
                 request.Content = content;
 
@@ -123,6 +124,7 @@ namespace SciChartHeatmapAudio.Services
                     WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpClient");
                     var httpClient = new HttpClient(handler);
                     HttpResponseMessage response = await httpClient.SendAsync(request);
+                    WvlLogger.Log(LogType.TraceValues, "PostTest() - HttpClient.SendAsync() - response : " + response.ToString());
                     response.EnsureSuccessStatusCode();
 
                     servResp = await response.Content.ReadAsStringAsync();

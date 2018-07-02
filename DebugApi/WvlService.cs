@@ -7,8 +7,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using SciChartHeatmapAudio.Helpers;
-using static SciChartHeatmapAudio.Helpers.WvlLogger;
 
 namespace DebugApi
 {
@@ -21,7 +19,7 @@ namespace DebugApi
         public async Task PostAudioFile(string file)
         {
             file = fileName;
-            WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - fileName : " + fileName);
+            Logger.Log("PostAudioFile() - fileName : " + fileName);
             using (HttpClient client = new HttpClient())
             {
                 
@@ -46,14 +44,14 @@ namespace DebugApi
                 try
                 {
                     /*
-                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - Create client.DefaultRequestHeaders");
+                    WvlLogger.Log("PostAudioFile() - Create client.DefaultRequestHeaders");
                     client.DefaultRequestHeaders.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("multipart/form-data"));
                     client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "multipart/form-data");
                     */
                     //client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
 
-                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - MultipartFormDataContent");
+                    Logger.Log("PostAudioFile() - MultipartFormDataContent");
 
                     byte[] b1 = FileToByteArray(fileName);
                     byte[] b2 = FileToByteArray2(fileName);
@@ -66,14 +64,14 @@ namespace DebugApi
                     formData.Add(new StringContent("Pierre-Christophe"), "user_name");
                     formData.Add(new ByteArrayContent(b1, 0, b1.Length), "audio_file", "audio.wav");
 
-                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - client.PostAsync()");
+                    Logger.Log("PostAudioFile() - client.PostAsync()");
                     var responseObj = await client.PostAsync(url, formData);
 
-                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - Response : " + responseObj.ToString());
+                    Logger.Log("PostAudioFile() - Response : " + responseObj.ToString());
                 }
                 catch (Exception ex)
                 {
-                    WvlLogger.Log(LogType.TraceAll,"PostAudioFile() - Exception : " + ex.ToString());
+                    Logger.Log("PostAudioFile() - Exception : " + ex.ToString());
                 }
 
             }
@@ -86,20 +84,20 @@ namespace DebugApi
         /// <returns></returns>
         public async Task<string> PostTest()
         {
-            WvlLogger.Log(LogType.TraceAll,"PostTest()");
+            Logger.Log("PostTest()");
             string servResp = "";
             string boundary = "----CustomBoundary" + DateTime.Now.Ticks.ToString("x");
 
             byte[] b1 = FileToByteArray(fileName);
             byte[] b2 = FileToByteArray2(fileName);
 
-            WvlLogger.Log(LogType.TraceAll,"PostTest() - MultipartFormDataContent");
+            Logger.Log("PostTest() - MultipartFormDataContent");
             using (var content = new MultipartFormDataContent(boundary))
             {
-                WvlLogger.Log(LogType.TraceAll,"PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // "  + content.Headers.ToString());
+                Logger.Log("PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // "  + content.Headers.ToString());
                 content.Headers.Remove("Content-Type");
                 content.Headers.TryAddWithoutValidation("Content-Type", "multipart/form-data; boundary=" + boundary);
-                WvlLogger.Log(LogType.TraceAll,"PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // " + content.Headers.ToString());
+                Logger.Log("PostTest() - MultipartFormDataContent.Headers : " + content.Headers.Count().ToString() + " // " + content.Headers.ToString());
 
                 content.Add(new StringContent("rotating_machine"), "machine_type");
                 content.Add(new StringContent("My machine"), "machine_name");
@@ -107,29 +105,29 @@ namespace DebugApi
                 content.Add(new StringContent("Pierre-Christophe"), "user_name");
                 content.Add(new ByteArrayContent(b1, 0, b1.Length), "audio_file", "audio.wav");
 
-                WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpClientHandler");
+                Logger.Log("PostTest() - HttpClientHandler");
                 HttpClientHandler handler = new HttpClientHandler();
                 var cookieContainer = new CookieContainer();
                 handler.CookieContainer = cookieContainer;
 
-                WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpRequestMessage");
+                Logger.Log("PostTest() - HttpRequestMessage");
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://51.254.131.100/api/recordings/");
                 request.Headers.ExpectContinue = false;
                 request.Content = content;
 
                 try
                 {
-                    WvlLogger.Log(LogType.TraceAll,"PostTest() - HttpClient");
+                    Logger.Log("PostTest() - HttpClient");
                     var httpClient = new HttpClient(handler);
                     HttpResponseMessage response = await httpClient.SendAsync(request);
-                    WvlLogger.Log(LogType.TraceAll,"PostTest() - response : " + response.ToString());
+                    Logger.Log("PostTest() - response : " + response.ToString());
                     response.EnsureSuccessStatusCode();
 
                     servResp = await response.Content.ReadAsStringAsync();
                 }
                 catch (Exception ex)
                 {
-                    WvlLogger.Log(LogType.TraceAll,"PostTest() - Exception : " + ex.ToString());
+                    Logger.Log("PostTest() - Exception : " + ex.ToString());
                 }
             }
 
@@ -138,12 +136,12 @@ namespace DebugApi
 
         async Task Post3(string fileName)
         {
-            WvlLogger.Log(LogType.TraceAll,"Post3()");
+            Logger.Log("Post3()");
             using (var client = new HttpClient())
             {
                 using (var content = new MultipartFormDataContent())
                 {
-                    WvlLogger.Log(LogType.TraceAll,"Post3() - KeyValuePair");
+                    Logger.Log("Post3() - KeyValuePair");
                     var values = new []
                     {
                         new KeyValuePair<string, string>("rotating_machine", "machine_type"),
@@ -157,7 +155,7 @@ namespace DebugApi
                         content.Add(new StringContent(keyValuePair.Value), keyValuePair.Key);
                     }
 
-                    WvlLogger.Log(LogType.TraceAll,"Post3() - fileContent");
+                    Logger.Log("Post3() - fileContent");
                     var fileContent = new ByteArrayContent(System.IO.File.ReadAllBytes(fileName));
                     fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
                     {
@@ -167,13 +165,13 @@ namespace DebugApi
 
                     try
                     {
-                        WvlLogger.Log(LogType.TraceAll,"Post3() - PostAsync()");
+                        Logger.Log("Post3() - PostAsync()");
                         var result = client.PostAsync(url, content).Result;
-                        WvlLogger.Log(LogType.TraceAll,"Post3() - result : " + result.ToString());
+                        Logger.Log("Post3() - result : " + result.ToString());
                     }
                     catch (Exception ex)
                     {
-                        WvlLogger.Log(LogType.TraceAll,"Post3() - Exception : " + ex.ToString());
+                        Logger.Log("Post3() - Exception : " + ex.ToString());
                     }
                 }
             }
@@ -181,21 +179,23 @@ namespace DebugApi
 
         private byte[] FileToByteArray(string fullFilePath)
         {
-            WvlLogger.Log(LogType.TraceAll,"FileToByteArray()");
+            Logger.Log("FileToByteArray()");
             FileStream fs = System.IO.File.OpenRead(fullFilePath);
             byte[] bytes = new byte[fs.Length];
             fs.Read(bytes, 0, Convert.ToInt32(fs.Length));
             fs.Close();
-            WvlLogger.Log(LogType.TraceAll,"FileToByteArray() - bytes : " + bytes.Length.ToString());
+            Logger.Log("FileToByteArray() - bytes : " + bytes.Length.ToString());
             return bytes;
         }
 
         private byte[] FileToByteArray2(string fullFilePath)
         {
-            WvlLogger.Log(LogType.TraceAll,"FileToByteArray2()");
+            Logger.Log("FileToByteArray2()");
             byte[] bytes = System.IO.File.ReadAllBytes(fullFilePath);
-            WvlLogger.Log(LogType.TraceAll,"FileToByteArray2() - bytes : " + bytes.Length.ToString());
+            Logger.Log("FileToByteArray2() - bytes : " + bytes.Length.ToString());
             return bytes;
+
+  
         }
 
     }

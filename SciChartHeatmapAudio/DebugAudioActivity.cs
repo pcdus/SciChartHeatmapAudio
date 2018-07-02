@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using SciChartHeatmapAudio.Services;
 using static SciChartHeatmapAudio.Helpers.WvlLogger;
 using SciChart.Core.Model;
+using Android.Renderscripts;
 
 namespace SciChartHeatmapAudio
 {
@@ -43,19 +44,20 @@ namespace SciChartHeatmapAudio
         XyDataSeries<int, int> fftDataSeries;
 
         // UniformHeatmapDataSeries
-        //UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(width, height);
-        UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(new int[width, height], 0, 10000, 0, 1);
+        UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(width, height);
+        //UniformHeatmapDataSeries<int, int, int> heatmapSeries = new UniformHeatmapDataSeries<int, int, int>(new int[width, height], 0, 100000, 0, 100000);
 
 
-        public static int width = 1024;
-        public static int height = 1024;
-        //public static int width = 128;
+        //public static int width = 1024;
         //public static int height = 1024;
+        public static int width = 512;
+        public static int height = 512;
 
         public int[] Data = new int[width * height];
 
         // Others
-        int samplesCount = 2048;
+        //int samplesCount = 2048;
+        int samplesCount = 1024;
         CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         CancellationToken token;
         int lastElement = 0;
@@ -155,37 +157,47 @@ namespace SciChartHeatmapAudio
             {
                 AutoRange = AutoRange.Always,
                 //AutoRange = AutoRange.Never,
+                /*
                 DrawMajorBands = false,
                 DrawLabels = false,
                 DrawMajorTicks = false,
                 DrawMinorTicks = false,
                 DrawMajorGridLines = false,
                 DrawMinorGridLines = false,
+                */
                 FlipCoordinates = true,
                 AxisAlignment = AxisAlignment.Left,
-                //VisibleRange = new DoubleRange(0, 10)
+ 
+                //VisibleRange = new DoubleRange(900, 1000)
                 //VisibleRange = new DoubleRange(0, 5)
-                //VisibleRange = new DoubleRange(0, 128)
+                //VisibleRange = new DoubleRange(-200,2048)
+                
             };
 
             var yAxis = new NumericAxis(this)
             {
+                
                 AutoRange = AutoRange.Always,
                 //AutoRange = AutoRange.Never,
+                /*
                 DrawMajorBands = false,
                 DrawLabels = false,
                 DrawMajorTicks = false,
                 DrawMinorTicks = false,
                 DrawMajorGridLines = false,
                 DrawMinorGridLines = false,
+                */
                 FlipCoordinates = true,
                 AxisAlignment = AxisAlignment.Bottom,
-                //VisibleRange = new DoubleRange(0, 10000)
+                
+                //VisibleRange = new DoubleRange(height-60, height)
                 //VisibleRange = new DoubleRange(-3000, 20000)
                 //VisibleRange = new DoubleRange(-300,2048)
+                
             };
 
             // from XF sample
+
             /*
             var rs = new FastUniformHeatmapRenderableSeries
             {
@@ -195,23 +207,103 @@ namespace SciChartHeatmapAudio
                     new float[] { 0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f }
                     )
             };
-            */       
+            */
+
 
             // from Android.Kotlin sample
             var rs = new FastUniformHeatmapRenderableSeries
             {
                 DataSeries = heatmapSeries,
-                Maximum = 70,
-                Minimum = -30,
-                //Maximum = 280,
-                //Minimum = -120,
-                ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
-                    new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
-                    new float[] { 0f, 0.0001f, 0.25f, 0.50f, 0.75f, 1f }
+                
+                //Maximum = 70,
+                //Minimum = -30,
+
+                //Maximum = 40,
+                //Minimum = -40,
+
+                Maximum = 30,
+                Minimum = -40,
+
+                /*
+                CellTextStyle = new Font().
+
+                          .withCellTextStyle(sciChartBuilder.newFont().withTextSize(8).withTextColor(ColorUtil.White).build())
+                .withDrawTextInCell(true)
+                */
+
                 //ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
-                //    new int[] { Color.Transparent, Color.Yellow, Color.Orange, Color.Red, Color.Purple, Color.Black },
-                //    new float[] { 0f, 0.05f, 0.10f, 0.15f, 0.20f, 1f }
-                )
+                //    new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
+                //    new float[] { 0f, 0.0001f, 0.25f, 0.50f, 0.75f, 1f })
+
+                
+                ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
+                        //new int[] {
+                        //    Color.Transparent,
+                        //    Color.White,
+                        //    Color.LightYellow,
+                        //    Color.Yellow,
+                        //    Color.Orange,
+                        //    Color.OrangeRed,
+                        //    Color.Red,
+                        //    Color.Pink,
+                        //    Color.Purple,
+                        //    Color.DarkBlue,
+                        //    Color.Black },
+                        new int[] {
+                        Color.Black,
+                        Color.DarkBlue,
+                        Color.Purple,
+                        Color.Pink,
+                        Color.Red,
+                        Color.OrangeRed,
+                        Color.Orange,
+                        Color.Yellow,
+                        Color.LightYellow,
+                        Color.White,
+                        Color.Transparent },
+                    //new float[] {
+                    //    0f,
+                    //    0.10f,
+                    //    0.20f,
+                    //    0.30f,
+                    //    0.40f,
+                    //    0.50f,
+                    //    0.60f,
+                    //    0.70f,
+                    //    0.80f,
+                    //    0.90f,
+                    //    1f })
+                    new float[] {
+                        0f,
+                        0.55f,
+                        0.60f,
+                        0.65f,
+                        0.70f,
+                        0.75f,
+                        0.80f,
+                        0.85f,
+                        0.90f,
+                        0.95f,
+                        1f })
+
+
+                /*
+                ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
+                        new int[] {
+                        Color.Black,
+                        Color.Purple,
+                        Color.Red,
+                        Color.Orange,
+                        Color.Yellow,
+                        Color.White },
+                    new float[] {
+                        0f,
+                        0.20f,
+                        0.40f,
+                        0.60f,
+                        0.80f,
+                        1f })
+                */
             };
             
 
@@ -230,8 +322,15 @@ namespace SciChartHeatmapAudio
             var yAxisDragModifier = new YAxisDragModifier();
             yAxisDragModifier.SetReceiveHandledEvents(true);
 
+            var rollOverModifer = new RolloverModifier
+            {
+                ShowTooltip = true,
+                ShowAxisLabels = true,
+                DrawVerticalLine = true
+            };
+
             // Create modifier group from declared modifiers
-            var modifiers = new ModifierGroup(pinchZoomModifier, zoomPanModifier, zoomExtentsModifier, yAxisDragModifier);
+            var modifiers = new ModifierGroup(pinchZoomModifier, zoomPanModifier, zoomExtentsModifier, yAxisDragModifier, rollOverModifer);
 
             #endregion
 
@@ -240,7 +339,7 @@ namespace SciChartHeatmapAudio
                 HeatmapSurface.XAxes.Add(xAxis);
                 HeatmapSurface.YAxes.Add(yAxis);
                 HeatmapSurface.RenderableSeries.Add(rs);
-                HeatmapSurface.ChartModifiers.Add(modifiers);
+                //HeatmapSurface.ChartModifiers.Add(modifiers);
             }
 
         }

@@ -68,7 +68,7 @@ namespace SciChartHeatmapAudio.Services
 
         #region FFT
 
-        //public async Task<int[]> FFT(int[] y)
+        //public int[] FFT(int[] y)
         public async Task<int[]> FFT(int[] y)
         {
             WvlLogger.Log(LogType.TraceAll,"FFT()");
@@ -91,8 +91,8 @@ namespace SciChartHeatmapAudio.Services
                 result[i] = (int)current;
             }
 
-            //samplesUpdated(this, new SamplesUpdatedEventArgs(result));
-            PrepareHeatmapDataSeries(result);
+            samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+            //PrepareHeatmapDataSeries(result);
             return result;
         }
 
@@ -118,7 +118,7 @@ namespace SciChartHeatmapAudio.Services
                 WvlLogger.Log(LogType.TraceValues, "PrepareHeatmapDataSeries() - Data after Array.Copy() : " + Data.Sum().ToString());
 
                 //heatmapSeries.UpdateZValues(Data);
-                //samplesUpdated(this, new SamplesUpdatedEventArgs(Data));
+               samplesUpdated(this, new SamplesUpdatedEventArgs(Data));
 
                 WvlLogger.Log(LogType.TraceAll, "PrepareHeatmapDataSeries() - UpdateZValues()");
 

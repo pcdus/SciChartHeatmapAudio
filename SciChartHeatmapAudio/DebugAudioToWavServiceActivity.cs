@@ -382,7 +382,7 @@ namespace SciChartHeatmapAudio
         //public async void UpdateHeatmapDataSeries(int[] data)
         {
             WvlLogger.Log(LogType.TraceAll,"UpdateHeatmapDataSeries()");
-            /*
+            
             //WvlLogger.Log(LogType.TraceAll,"UpdateHeatmapDataSeries - Width : " + width.ToString() + " - Height : " + height.ToString());
             WvlLogger.Log(LogType.TraceValues, "UpdateHeatmapDataSeries() - Data before Array.Copy() : " + Data.Sum().ToString());
 
@@ -405,8 +405,8 @@ namespace SciChartHeatmapAudio
             {
                 WvlLogger.Log(LogType.TraceExceptions,"UpdateSamplesDataSeries() - exception : " + e.ToString());
             }
-            */
-
+            
+            /*
             try
             {
                 heatmapSeries.UpdateZValues(data);
@@ -415,6 +415,7 @@ namespace SciChartHeatmapAudio
             {
                 WvlLogger.Log(LogType.TraceExceptions, "UpdateSamplesDataSeries() - exception : " + e.ToString());
             }
+            */
         }
 
 

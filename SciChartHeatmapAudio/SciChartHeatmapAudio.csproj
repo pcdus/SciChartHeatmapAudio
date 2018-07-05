@@ -70,6 +70,7 @@
     <Compile Include="DebugAudioActivity.cs" />
     <Compile Include="DebugAudioToWavServiceActivity.cs" />
     <Compile Include="DebugHeatmapActivity.cs" />
+    <Compile Include="Helpers\ArraysHelper.cs" />
     <Compile Include="Helpers\CloneableAudioRecord.cs" />
     <Compile Include="Helpers\DataManager.cs" />
     <Compile Include="Helpers\FilesHelper.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="Services\AsyncAudioService.cs" />
     <Compile Include="Services\AudioService.cs" />
     <Compile Include="Services\IAudioService.cs" />
+    <Compile Include="Services\SamplesUpdatedEventArgs.cs" />
     <Compile Include="Services\WavAudioService.cs" />
     <Compile Include="Services\WvlService.cs" />
   </ItemGroup>

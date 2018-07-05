@@ -58,6 +58,7 @@ namespace SciChartHeatmapAudio
         // Others
         //int samplesCount = 2048;
         int samplesCount = 1024;
+
         CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         CancellationToken token;
         int lastElement = 0;
@@ -167,17 +168,18 @@ namespace SciChartHeatmapAudio
                 */
                 FlipCoordinates = true,
                 AxisAlignment = AxisAlignment.Left,
- 
+
                 //VisibleRange = new DoubleRange(900, 1000)
                 //VisibleRange = new DoubleRange(0, 5)
                 //VisibleRange = new DoubleRange(-200,2048)
-                
+                //VisibleRange = new DoubleRange(100, 110),
+                //GrowBy = new DoubleRange(1, 1),
             };
 
             var yAxis = new NumericAxis(this)
             {
                 
-                AutoRange = AutoRange.Always,
+                //AutoRange = AutoRange.Always,
                 //AutoRange = AutoRange.Never,
                 /*
                 DrawMajorBands = false,
@@ -189,11 +191,17 @@ namespace SciChartHeatmapAudio
                 */
                 FlipCoordinates = true,
                 AxisAlignment = AxisAlignment.Bottom,
-                
-                //VisibleRange = new DoubleRange(height-60, height)
+
+
+
+                //VisibleRange = new DoubleRange(height-60, height),
+
+                //VisibleRange = new DoubleRange(height-120, height),
+                //VisibleRange = new DoubleRange(height - 10, height),
+                VisibleRange = new DoubleRange(height/2, height),
                 //VisibleRange = new DoubleRange(-3000, 20000)
                 //VisibleRange = new DoubleRange(-300,2048)
-                
+                //GrowBy = new DoubleRange(1, 1),
             };
 
             // from XF sample
@@ -214,14 +222,14 @@ namespace SciChartHeatmapAudio
             var rs = new FastUniformHeatmapRenderableSeries
             {
                 DataSeries = heatmapSeries,
-                
+
                 //Maximum = 70,
                 //Minimum = -30,
 
-                //Maximum = 40,
+                //Maximum = 30,
                 //Minimum = -40,
 
-                Maximum = 30,
+                Maximum = 40,
                 Minimum = -40,
 
                 /*
@@ -235,7 +243,8 @@ namespace SciChartHeatmapAudio
                 //    new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
                 //    new float[] { 0f, 0.0001f, 0.25f, 0.50f, 0.75f, 1f })
 
-                
+
+                /*
                 ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
                         //new int[] {
                         //    Color.Transparent,
@@ -261,33 +270,34 @@ namespace SciChartHeatmapAudio
                         Color.LightYellow,
                         Color.White,
                         Color.Transparent },
-                    //new float[] {
-                    //    0f,
-                    //    0.10f,
-                    //    0.20f,
-                    //    0.30f,
-                    //    0.40f,
-                    //    0.50f,
-                    //    0.60f,
-                    //    0.70f,
-                    //    0.80f,
-                    //    0.90f,
-                    //    1f })
                     new float[] {
                         0f,
-                        0.55f,
+                        0.10f,
+                        0.20f,
+                        0.30f,
+                        0.40f,
+                        0.50f,
                         0.60f,
-                        0.65f,
                         0.70f,
-                        0.75f,
                         0.80f,
-                        0.85f,
                         0.90f,
-                        0.95f,
-                        1f })
+                        1f }),
+                    //new float[] {
+                    //    0f,
+                    //    0.55f,
+                    //    0.60f,
+                    //    0.65f,
+                    //    0.70f,
+                    //    0.75f,
+                    //    0.80f,
+                    //    0.85f,
+                    //    0.90f,
+                    //    0.95f,
+                    //    1f }),
+                    */
 
 
-                /*
+
                 ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
                         new int[] {
                         Color.Black,
@@ -296,13 +306,32 @@ namespace SciChartHeatmapAudio
                         Color.Orange,
                         Color.Yellow,
                         Color.White },
+                    //new float[] {
+                    //    0f,
+                    //    0.20f,
+                    //    0.40f,
+                    //    0.60f,
+                    //    0.80f,
+                    //    1f }),
+                    //new float[] {
+                    //    0.50f,
+                    //    0.60f,
+                    //    0.70f,
+                    //    0.80f,
+                    //    0.90f,
+                    //    1f }),
                     new float[] {
-                        0f,
-                        0.20f,
-                        0.40f,
-                        0.60f,
+                        0.25f,
+                        0.50f,
+                        0.65f,
                         0.80f,
-                        1f })
+                        0.90f,
+                        1f }),
+
+
+                /*
+                CellTextStyle = new SciChart.Drawing.Common.FontStyle(16, Color.White),
+                DrawTextInCell = true,
                 */
             };
             

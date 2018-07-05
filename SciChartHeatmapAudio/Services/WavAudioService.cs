@@ -41,6 +41,7 @@ namespace SciChartHeatmapAudio.Services
 
         // Bools
         bool isRecording = false;
+        bool isWriting = false;
 
         // Files
         private static string AUDIO_RECORDER_FILE_EXT_WAV = ".wav";
@@ -51,15 +52,24 @@ namespace SciChartHeatmapAudio.Services
 
         private System.Threading.Thread recordingThread = null;
         private System.Threading.Thread chartsThread = null;
+        private Thread samplesUpdatedThread = null;
 
-        int bufferSize = 2048 * sizeof(byte);
-        //int bufferSize = 1024 * sizeof(byte);
+        //int bufferSize = 2048 * sizeof(byte);
+        int bufferSize = 1024 * sizeof(byte);
         byte[] buffer;
+
+        int cumulBufferSize = 0;
+        int bufferCount = 0;
+        byte[] cumulBufferByte;
+        short[] cumulBufferShort;
+        int[] cumulBufferInt;
+
         AudioTrack audioTrack = null;
 
         #region FFT
 
-        public int[] FFT(int[] y)
+        //public async Task<int[]> FFT(int[] y)
+        public async Task<int[]> FFT(int[] y)
         {
             WvlLogger.Log(LogType.TraceAll,"FFT()");
             var input = new AForge.Math.Complex[y.Length];
@@ -81,19 +91,57 @@ namespace SciChartHeatmapAudio.Services
                 result[i] = (int)current;
             }
 
+            //samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+            PrepareHeatmapDataSeries(result);
             return result;
+        }
+
+        public void PrepareHeatmapDataSeries(int[] data)
+        {
+            WvlLogger.Log(LogType.TraceAll, "PrepareHeatmapDataSeries()");
+            int width = 512;
+            int height = 512;
+            int[] Data = new int[width * height];
+
+            //WvlLogger.Log(LogType.TraceAll,"UpdateHeatmapDataSeries - Width : " + width.ToString() + " - Height : " + height.ToString());
+            WvlLogger.Log(LogType.TraceValues, "PrepareHeatmapDataSeries() - Data before Array.Copy() : " + Data.Sum().ToString());
+
+            var spectrogramSize = width * height;
+            var fftSize = data.Length;
+            var offset = spectrogramSize - fftSize;
+            WvlLogger.Log(LogType.TraceValues, "PrepareHeatmapDataSeries() - set offset : " + offset.ToString());
+
+            try
+            {
+                Array.Copy(Data, fftSize, Data, 0, offset);
+                Array.Copy(data, 0, Data, offset, fftSize);
+                WvlLogger.Log(LogType.TraceValues, "PrepareHeatmapDataSeries() - Data after Array.Copy() : " + Data.Sum().ToString());
+
+                //heatmapSeries.UpdateZValues(Data);
+                //samplesUpdated(this, new SamplesUpdatedEventArgs(Data));
+
+                WvlLogger.Log(LogType.TraceAll, "PrepareHeatmapDataSeries() - UpdateZValues()");
+
+            }
+            catch (System.Exception e)
+            {
+                WvlLogger.Log(LogType.TraceExceptions, "PrepareHeatmapDataSeries() - exception : " + e.ToString());
+            }
         }
 
         #endregion
 
         #region AudioRecord Recording / Playing
 
-        void OnNext()
+        //void OnNext()
+        async void OnNext()
         {
             WvlLogger.Log(LogType.TraceAll, "OnNext()");
+            /*
             short[] audioBuffer = new short[2048];
             //short[] audioBuffer = new short[1024];
             //audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
+            
             audioRecordCharts.Read(audioBuffer, 0, audioBuffer.Length);
             WvlLogger.Log(LogType.TraceValues, "OnNext() - audioRecordCharts.Read() - audioBUffer : " + audioBuffer.Length.ToString());
             int[] result = new int[audioBuffer.Length];
@@ -101,8 +149,43 @@ namespace SciChartHeatmapAudio.Services
             {
                 result[i] = (int)audioBuffer[i];
             }
+            bufferCount++;
+            if (cumulBufferShort != null)
+                cumulBufferShort = ArraysHelper.Combine(cumulBufferShort, audioBuffer);
+            else
+                cumulBufferShort = ArraysHelper.Init(audioBuffer);
 
             samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+            */
+
+            //byte[] audioBufferDebug = new byte[2048];
+            byte[] audioBufferDebug = new byte[1024];
+            bufferCount++;
+            audioRecord.Read(audioBufferDebug, 0, audioBufferDebug.Length);
+            if (cumulBufferByte != null)
+                cumulBufferByte = ArraysHelper.Combine(cumulBufferByte, audioBufferDebug);
+            else
+                cumulBufferByte = ArraysHelper.Init(audioBufferDebug);
+
+            int[] bytesAsInts = Array.ConvertAll(audioBufferDebug, c => (int)c);
+
+            samplesUpdated(this, new SamplesUpdatedEventArgs(bytesAsInts));
+
+
+            /*
+            samplesUpdatedThread = new Thread(() => samplesUpdated(this, new SamplesUpdatedEventArgs(bytesAsInts)));
+            samplesUpdatedThread.Start();
+            */
+
+            //var res = FFT(bytesAsInts);
+            
+
+        }
+
+
+        private void SamplesUpdated(Context context, EventArgs e)
+        {
+
         }
 
         #region -> Recording
@@ -132,43 +215,39 @@ namespace SciChartHeatmapAudio.Services
 
 
             audioRecordCharts = audioRecord;
-            /*
-            int i = (int)audioRecord.State;
-            if (i == 1)
-            */
+
+            
             if (audioRecord.State == State.Initialized)
             {
                 audioRecord.StartRecording();
             }
+            /*
             if (audioRecordCharts.State == State.Initialized)
             {
                 audioRecordCharts.StartRecording();
             }
-            isRecording = true;
-
-            /*
-            recordingThread = new Thread(new Runnable() {
-            @Override
-            public void run()
-            {
-                writeAudioDataToFile();
-            }
-            },"AudioRecorder Thread");
-		    recordingThread.start();
             */
-
-            //audioRecordCharts = (CloneableAudioRecord)audioRecord.Clone();
-
+            isRecording = true;
+                        
             recordingThread = new System.Threading.Thread(new ThreadStart(
                 WriteAudioDataToFile
-                ));            
+                ));
+
+            /*
             chartsThread = new System.Threading.Thread(new ThreadStart(
                 RepeatOnNext
                 ));
+            */
+
+            recordingThread.Priority = System.Threading.ThreadPriority.Normal;
+            recordingThread.IsBackground = true;
             recordingThread.Start();
-            chartsThread.Start();
+            //chartsThread.Start();
+            
+
             /*
-            while (audioRecord.RecordingState == RecordState.Recording)
+            //while (audioRecord.RecordingState == RecordState.Recording)
+            while (audioRecordCharts.RecordingState == RecordState.Recording)
             {
                 try
                 {
@@ -204,10 +283,6 @@ namespace SciChartHeatmapAudio.Services
             if (null != audioRecord)
             {
                 isRecording = false;
-                /*
-                int i = (int)audioRecord.State;
-                if (i == 1)
-                */
                 if (audioRecord.State == State.Initialized)
                     audioRecord.Stop();
                 audioRecord.Release();
@@ -215,16 +290,35 @@ namespace SciChartHeatmapAudio.Services
                 audioRecord = null;
                 recordingThread = null;
             }
-
+            
+            /*
             if (null != audioRecordCharts)
             {
                 if (audioRecordCharts.State == State.Initialized)
+                {
                     audioRecordCharts.Stop();
+
+                    // Write file after recording
+                    isWriting = true;
+                    WriteAudioDataToFileAfterRecording();
+                }
                 audioRecordCharts.Release();
 
                 audioRecordCharts = null;
                 chartsThread = null;
+
+                samplesUpdatedThread = null;
             }
+            */
+
+            /*
+            if (audioRecordCharts.State == State.Initialized)
+            {
+                audioRecordCharts.Stop();
+                WriteAudioDataToFileAfterRecording();
+            }
+            audioRecordCharts.Release();
+            */
 
             CopyWaveFile(GetTempFilename(), GetFilename());
             //DeleteTempFile();
@@ -337,41 +431,27 @@ namespace SciChartHeatmapAudio.Services
                                                         " - bufferSize : " + bufferSize.ToString() +
                                                         " - read : " + read.ToString());
 
-                    // OnNext
+                    // OnNext treatment
                     //WvlLogger.Log(LogType.TraceAll, "EmbeddedOnNext()");
 
+                    int[] bytesAsInts = Array.ConvertAll(data, c => (int)c);
                     /*
-                    audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
-
-                    int[] result = new int[bufferSize];
-                    short[] shortByte = Array.ConvertAll(data, b => (short)b);
-                    for (int i = 0; i < bufferSize; i++)
-                    {
-                        result[i] = (int)shortByte[i];
-                    }
+                    if (cumulBufferInt != null)
+                        cumulBufferInt = ArraysHelper.Combine(cumulBufferInt, bytesAsInts);
+                    else
+                        cumulBufferInt = ArraysHelper.Init(bytesAsInts);
                     */
 
-                    // data = short[]   
                     /*
-                    int[] result = new int[data.Length];
-                    for (int i = 0; i < data.Length; i++)
-                    {
-                        result[i] = (int)data[i];
-                    }                   
-                    samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+                    var res = FFT(bytesAsInts);
+                    //samplesUpdated(this, new SamplesUpdatedEventArgs(res));
                     */
 
-                    // dataShort = short[]   
-                    /*
-                    short[] dataShort = new short[bufferSize];
-                    dataShort = Array.ConvertAll(data, d => (short)d);
-                    int[] result = new int[dataShort.Length];
-                    for (int i = 0; i < dataShort.Length; i++)
-                    {
-                        result[i] = (int)dataShort[i];
-                    }                   
-                    samplesUpdated(this, new SamplesUpdatedEventArgs(result));
-                    */
+                    samplesUpdatedThread = new Thread(() => FFT(bytesAsInts));
+                    samplesUpdatedThread.Priority = System.Threading.ThreadPriority.Highest;
+                    samplesUpdatedThread.Start();
+
+
 
                     //if (AudioRecord.ERROR_INVALID_OPERATION != read)
                     if ((int)RecordStatus.ErrorInvalidOperation != read)
@@ -446,11 +526,15 @@ namespace SciChartHeatmapAudio.Services
 
             if (null != fos)
             {
+                /*
                 //audioRecordCharts.
-                while (isRecording)
+                //while (isWriting)
+                for (int i = 0; i <= bufferCount; i++)
                 {
                     //WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFile() - audioRecord.Read - bufferSize : " + bufferSize.ToString());
-                    read = audioRecordCharts.Read(data, 0, bufferSize);
+                    //read = audioRecordCharts.Read(data, 0, bufferSize);
+                    read = audioRecordCharts.Read(data, cumulBufferSize, bufferSize);
+                    cumulBufferSize += bufferSize - 1;
                     WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFileAfterRecording() - audioRecord.Read() " +
                                                         " - data : " + data.Length.ToString() +
                                                         " - bufferSize : " + bufferSize.ToString() +
@@ -459,38 +543,38 @@ namespace SciChartHeatmapAudio.Services
                     // OnNext
                     //WvlLogger.Log(LogType.TraceAll, "EmbeddedOnNext()");
 
-                    /*
-                    audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
+                    
+                    ////audioRecord.Read(audioBuffer, 0, audioBuffer.Length);
 
-                    int[] result = new int[bufferSize];
-                    short[] shortByte = Array.ConvertAll(data, b => (short)b);
-                    for (int i = 0; i < bufferSize; i++)
-                    {
-                        result[i] = (int)shortByte[i];
-                    }
-                    */
+                    ////int[] result = new int[bufferSize];
+                    ////short[] shortByte = Array.ConvertAll(data, b => (short)b);
+                    ////for (int i = 0; i < bufferSize; i++)
+                    ////{
+                    ////    result[i] = (int)shortByte[i];
+                    ////}
+                    
 
                     // data = short[]   
-                    /*
-                    int[] result = new int[data.Length];
-                    for (int i = 0; i < data.Length; i++)
-                    {
-                        result[i] = (int)data[i];
-                    }                   
-                    samplesUpdated(this, new SamplesUpdatedEventArgs(result));
-                    */
+                    
+                    ////int[] result = new int[data.Length];
+                    ////for (int i = 0; i < data.Length; i++)
+                    ////{
+                    ////    result[i] = (int)data[i];
+                    ////}                   
+                    ////samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+                    
 
                     // dataShort = short[]   
-                    /*
-                    short[] dataShort = new short[bufferSize];
-                    dataShort = Array.ConvertAll(data, d => (short)d);
-                    int[] result = new int[dataShort.Length];
-                    for (int i = 0; i < dataShort.Length; i++)
-                    {
-                        result[i] = (int)dataShort[i];
-                    }                   
-                    samplesUpdated(this, new SamplesUpdatedEventArgs(result));
-                    */
+                    
+                    ////short[] dataShort = new short[bufferSize];
+                    ////dataShort = Array.ConvertAll(data, d => (short)d);
+                    ////int[] result = new int[dataShort.Length];
+                    ////for (int i = 0; i < dataShort.Length; i++)
+                    ////{
+                    ////    result[i] = (int)dataShort[i];
+                    ////}                   
+                    ////samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+                    
 
                     //if (AudioRecord.ERROR_INVALID_OPERATION != read)
                     if ((int)RecordStatus.ErrorInvalidOperation != read)
@@ -502,24 +586,24 @@ namespace SciChartHeatmapAudio.Services
                                         " - dataByte : " + data.Length.ToString());
                             fos.Write(data);
                             // dataByte = byte[]
-                            /*
-                            byte[] dataByte = Array.ConvertAll(data, item => (byte)item);
-                            WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFile() - fos.Write(dataByte) " +
-                                         " - dataByte : " + dataByte.Length.ToString());
-                            fos.Write(dataByte);
-                            */
+                            
+                            ////byte[] dataByte = Array.ConvertAll(data, item => (byte)item);
+                            ////WvlLogger.Log(LogType.TraceValues, "WriteAudioDataToFile() - fos.Write(dataByte) " +
+                            ////             " - dataByte : " + dataByte.Length.ToString());
+                            ////fos.Write(dataByte);
+                            
 
-                            /*
-                            // dataShort = short[]                               
-                            short[] dataShort = new short[bufferSize];
-                            dataShort = Array.ConvertAll(data, d => (short)d);
-                            int[] result = new int[dataShort.Length];
-                            for (int i = 0; i < dataShort.Length; i++)
-                            {
-                                result[i] = (int)dataShort[i];
-                            }                   
-                            samplesUpdated(this, new SamplesUpdatedEventArgs(result));
-                            */
+                            
+                            ////// dataShort = short[]                               
+                            ////short[] dataShort = new short[bufferSize];
+                            ////dataShort = Array.ConvertAll(data, d => (short)d);
+                            ////int[] result = new int[dataShort.Length];
+                            ////for (int i = 0; i < dataShort.Length; i++)
+                            ////{
+                            ////    result[i] = (int)dataShort[i];
+                            ////}                   
+                            ////samplesUpdated(this, new SamplesUpdatedEventArgs(result));
+                            
                         }
                         catch (Java.IO.IOException e)
                         {
@@ -527,6 +611,32 @@ namespace SciChartHeatmapAudio.Services
                             WvlLogger.Log(LogType.TraceExceptions, "WriteAudioDataToFileAfterRecording - Exception on fos.Write() : " + e.ToString());
                         }
                     }
+                }
+                */
+
+                for (int i = 0; i < bufferCount; i++)
+                {
+                    /*
+                    //Span<short> ss = cumulBufferShort.Slice
+                    //var curBufferShort = cumulBufferShort.Slice(i * bufferSize, ((i + 1) * bufferSize) - 1);
+                    var curBufferShort = cumulBufferShort.Slice(i * bufferSize, ((i + 1) * bufferSize));
+
+                    data = new byte[curBufferShort.Length * sizeof(short)];
+                    Buffer.BlockCopy(curBufferShort, 0, data, 0, data.Length);
+                    */
+
+                    data = cumulBufferByte.Slice(i * bufferSize, ((i+1) * bufferSize));
+
+                    try
+                    {
+                        fos.Write(data);
+                    }
+                    catch (Java.IO.IOException e)
+                    {
+                        //e.printStackTrace();
+                        WvlLogger.Log(LogType.TraceExceptions, "WriteAudioDataToFileAfterRecording - Exception on fos.Write() : " + e.ToString());
+                    }
+
                 }
 
                 try

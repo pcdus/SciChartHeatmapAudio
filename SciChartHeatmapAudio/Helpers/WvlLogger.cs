@@ -14,7 +14,7 @@ namespace SciChartHeatmapAudio.Helpers
 
         public static void Log(LogType type, string param)
         {
-            if ((int)type >= (int)LogType.TraceValues)
+            if ((int)type >= (int)LogType.TraceAll)
                 Debug.WriteLine("Log : " + DateTime.Now.ToString("hh.mm.ss.ffffff") + " - " + param);
         }
     }

@@ -35,7 +35,8 @@ namespace SciChartHeatmapAudio
         CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         CancellationToken token;
         WavAudioService wavAudioService;
-        int samplesCount = 2048;
+        //int samplesCount = 2048;
+        int samplesCount = 1024;
 
         // bools
         private bool isRecording = false;
@@ -56,8 +57,10 @@ namespace SciChartHeatmapAudio
         int lastElement = 0;
 
         // HeatMap
-        public static int width = 1024;
-        public static int height = 1024;
+        //public static int width = 1024;
+        //public static int height = 1024;
+        public static int width = 512;
+        public static int height = 512;
         public int[] Data = new int[width * height];
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -264,7 +267,8 @@ namespace SciChartHeatmapAudio
                 DrawMajorGridLines = false,
                 DrawMinorGridLines = false,
                 FlipCoordinates = true,
-                AxisAlignment = AxisAlignment.Bottom
+                AxisAlignment = AxisAlignment.Bottom,
+                VisibleRange = new DoubleRange(height / 2, height),
             };
 
             // from XF sample
@@ -283,8 +287,8 @@ namespace SciChartHeatmapAudio
             var rs = new FastUniformHeatmapRenderableSeries
             {
                 DataSeries = heatmapSeries,
-                Maximum = 70,
-                Minimum = -30,
+                Maximum = 30,
+                Minimum = -40,
                 ColorMap = new SciChart.Charting.Visuals.RenderableSeries.ColorMap(
                     new int[] { Color.Transparent, Color.DarkBlue, Color.Purple, Color.Red, Color.Yellow, Color.White },
                     new float[] { 0f, 0.0001f, 0.25f, 0.50f, 0.75f, 1f }
@@ -316,7 +320,7 @@ namespace SciChartHeatmapAudio
                 HeatmapSurface.XAxes.Add(xAxis);
                 HeatmapSurface.YAxes.Add(yAxis);
                 HeatmapSurface.RenderableSeries.Add(rs);
-                HeatmapSurface.ChartModifiers.Add(modifiers);
+                //HeatmapSurface.ChartModifiers.Add(modifiers);
             }
         }
 
@@ -375,8 +379,10 @@ namespace SciChartHeatmapAudio
 
         //public void AppenData(int[] data)
         public void UpdateHeatmapDataSeries(int[] data)
+        //public async void UpdateHeatmapDataSeries(int[] data)
         {
             WvlLogger.Log(LogType.TraceAll,"UpdateHeatmapDataSeries()");
+            /*
             //WvlLogger.Log(LogType.TraceAll,"UpdateHeatmapDataSeries - Width : " + width.ToString() + " - Height : " + height.ToString());
             WvlLogger.Log(LogType.TraceValues, "UpdateHeatmapDataSeries() - Data before Array.Copy() : " + Data.Sum().ToString());
 
@@ -386,28 +392,41 @@ namespace SciChartHeatmapAudio
             WvlLogger.Log(LogType.TraceValues, "UpdateHeatmapDataSeries() - set offset : " + offset.ToString());
 
             try
-            {
+            {                
                 Array.Copy(Data, fftSize, Data, 0, offset);
                 Array.Copy(data, 0, Data, offset, fftSize);
                 WvlLogger.Log(LogType.TraceValues, "UpdateHeatmapDataSeries() - Data after Array.Copy() : " + Data.Sum().ToString());
 
                 heatmapSeries.UpdateZValues(Data);
                 WvlLogger.Log(LogType.TraceAll, "UpdateSamplesDataSeries() - UpdateZValues()");
+                
             }
             catch (System.Exception e)
             {
                 WvlLogger.Log(LogType.TraceExceptions,"UpdateSamplesDataSeries() - exception : " + e.ToString());
             }
+            */
+
+            try
+            {
+                heatmapSeries.UpdateZValues(data);
+            }
+            catch (System.Exception e)
+            {
+                WvlLogger.Log(LogType.TraceExceptions, "UpdateSamplesDataSeries() - exception : " + e.ToString());
+            }
         }
+
 
         #endregion
 
         #endregion
 
         private void AudioService_samplesUpdated(object sender, System.EventArgs e)
+        //private async void AudioService_samplesUpdated(object sender, System.EventArgs e)
         {
             WvlLogger.Log(LogType.TraceAll,"AudioService_samplesUpdated()");
-
+            
             var audioService = (WavAudioService)sender;
 
             if (token.IsCancellationRequested)
@@ -418,32 +437,44 @@ namespace SciChartHeatmapAudio
             }
 
             var arguments = e as SamplesUpdatedEventArgs;
-
+            
             if (arguments != null)
             {
                 WvlLogger.Log(LogType.TraceAll,"AudioService_samplesUpdated() - arguments != null");
                 var samples = arguments.UpdatedSamples;
-                if (samples.Length < samplesCount)
+
+                /*
+                //if (samples.Length < samplesCount)
+                if (samples.Length < (samplesCount / 2))
                 {
                     WvlLogger.Log(LogType.TraceValues, "AudioService_samplesUpdated() - samples.Length < samplesCount - sample.Length : " + samples.Length.ToString() + " samplesCount : " + samplesCount.ToString());
                     return;
                 }
+                */
 
                 WvlLogger.Log(LogType.TraceValues, "AudioService_samplesUpdated() - sample.Length : " + samples.Length.ToString());
 
-                
+
+                /*
                 //samplesDataSeries.YValues = samples;
-                UpdateSamplesDataSeries(samples);
+                //UpdateSamplesDataSeries(samples);
 
-                var fftValues = audioService.FFT(samples);
-
+                var fftValues = await audioService.FFT(samples);
+                
                 //fftDataSeries.YValues = fftValues;
                 //UpdateFFTDataSeries(fftValues);
-
+                */
                 //heatmapSeries.AppenData(fftValues);
-                UpdateHeatmapDataSeries(fftValues);
+                //UpdateHeatmapDataSeries(fftValues);
+                //UpdateHeatmapDataSeries(samples);
+
+                
+                System.Threading.Thread thread = new System.Threading.Thread(() => UpdateHeatmapDataSeries(samples));
+                thread.Priority = System.Threading.ThreadPriority.Highest;
+                thread.Start();
                 
             }
+            
         }
     }
 

@@ -73,6 +73,42 @@ namespace SciChartHeatmapAudio.Services
 
         }
 
+        /*
+        public double[] CalculateFFT(byte[] signal)
+        {
+            int mNumberOfFFTPoints = 1024;
+            double mMaxFFTSample;
+
+            double temp;
+            Complex[] y;
+            Complex[] complexSignal = new Complex[mNumberOfFFTPoints];
+            double[] absSignal = new double[mNumberOfFFTPoints / 2];
+
+            for (int i = 0; i < mNumberOfFFTPoints; i++)
+            {
+                temp = (double)((signal[2 * i] & 0xFF) | (signal[2 * i + 1] << 8)) / 32768.0F;
+                complexSignal[i] = new Complex(temp, 0.0);
+            }
+
+            y = FFT.fft(complexSignal); // --> Here I use FFT class
+
+            mMaxFFTSample = 0.0;
+            mPeakPos = 0;
+            for (int i = 0; i < (mNumberOfFFTPoints / 2); i++)
+            {
+                absSignal[i] = Math.Sqrt(Math.Pow(y[i].Re, 2) + Math.Pow(y[i].Im, 2));
+                if (absSignal[i] > mMaxFFTSample)
+                {
+                    mMaxFFTSample = absSignal[i];
+                    mPeakPos = i;
+                }
+            }
+
+            return absSignal;
+
+        }
+        */
+
         #endregion
 
         #region AudioRecord : Start/Stop/OnNext 
@@ -84,7 +120,8 @@ namespace SciChartHeatmapAudio.Services
             {
 
                 //audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Encoding.Pcm16bit, 2048 * sizeof(byte));
-                audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Android.Media.Encoding.Pcm16bit, buffer);
+                //audioRecord = new AudioRecord(AudioSource.Mic, 44100, ChannelIn.Mono, Android.Media.Encoding.Pcm16bit, buffer);
+                audioRecord = new AudioRecord(AudioSource.Mic, 48000, ChannelIn.Mono, Android.Media.Encoding.Pcm16bit, buffer);
                 WvlLogger.Log(LogType.TraceAll, "StartRecord() - AudioRecord : " + AudioSource.Mic.ToString() + 
                                                             " - SampleRateInHz : 44100" + 
                                                             " - ChannelIn : " + ChannelIn.Mono.ToString() + 
@@ -143,15 +180,4 @@ namespace SciChartHeatmapAudio.Services
 
     }
 
-    public class SamplesUpdatedEventArgs : EventArgs
-    {
-        public int[] UpdatedSamples { get; set; }
-
-        public SamplesUpdatedEventArgs(int[] samples)
-        {
-            WvlLogger.Log(LogType.TraceAll,"SamplesUpdatedEventArgs()");
-            WvlLogger.Log(LogType.TraceValues, "SamplesUpdatedEventArgs() - samples : " + samples.Sum().ToString());
-            UpdatedSamples = samples;
-        }
-    }
 }
